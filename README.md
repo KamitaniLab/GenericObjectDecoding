@@ -9,4 +9,4 @@ The fMRI data for five subjects (training, test_perception, and test_imagery) a
 For copyright reasons, we do not make the visual images used in our experiments publicly available on our server. You can find the visual images from the ImageNet database <http://image-net.org/index> using the synset IDs and image IDs listed in imageID_training.csv and imageID_test.csv files. We will provide a script to automatically download images from the ImageNet in future.
 
 ## Demo code
-TBA
+Currently, the codes used in the present study are available from the authors upon request. We will make the codes openly available soon.
