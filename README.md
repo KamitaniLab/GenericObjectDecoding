@@ -1,6 +1,6 @@
 # Generic Object Decoding
 
-This repository contains demo codes for replicating results in our paper: Horikawa, Kamitani "Generic decoding of seen and imagined objects using hierarchical visual features".
+This repository contains the data and demo codes for replicating results in our paper: Horikawa, Kamitani "Generic decoding of seen and imagined objects using hierarchical visual features".
 The generic object decoding approach enabled decoding of arbitrary object categories including those not used in model training. For more technical details, please refer to the paper: <https://arxiv.org/abs/1510.06479>.
 
 ## Data (fMRI data and visual features)
