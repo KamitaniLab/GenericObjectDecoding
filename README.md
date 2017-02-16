@@ -9,7 +9,7 @@ The fMRI data for five subjects (training, test_perception, and test_imagery) a
 ## Visual images
 For copyright reasons, we do not make the visual images used in our experiments publicly available on our server. You can directly download the images from URLs listed in the imageURL_training.txt (1-1200 training images)  and imageURL_test.txt (1-50 test images) files, which also can be downloaded from <http://brainliner.jp/data/brainliner/Generic_Object_Decoding>. 
 
-While most of the images can be donwloaded from the URL, some of the images have been deleted from the original URLs. In that case, you need to search the ImageNet database (2011, fall release; <http://image-net.org/download-imageurls>) using the synset ID and image ID listed in imageID_training.csv and imageID_test.csv files. The image ID is formatted as nxxxx_yyyy, where xxxx represents the WordNet ID (wnid) and yyyy represents the image ID. We will provide a script to automatically download images from the ImageNet in future.
+While most of the images can be downloaded from the URL, some of the images have been deleted from the original URLs. In that case, you have to search the ImageNet database (2011, fall release; <http://image-net.org/download-imageurls>) using the synset ID and image ID listed in imageID_training.csv and imageID_test.csv files. The image ID is formatted as xxxx_yyyy, where xxxx represents the WordNet ID (wnid) and yyyy represents the image ID. We will provide a script to automatically download images from the ImageNet in future.
 
 ## Demo codes
 Currently, the codes used in the present study are available from the authors upon request. We will make the codes openly available soon.
