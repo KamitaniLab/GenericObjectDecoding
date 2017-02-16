@@ -6,7 +6,8 @@ The generic object decoding approach enabled decoding of arbitrary object catego
 ## Data (fMRI data and visual features)
 The fMRI data for five subjects (training, test_perception, and test_imagery) and visual features (CNN1-8, HMAX1-3, GIST, and SIFT) are avairable from  <http://brainliner.jp/data/brainliner/Generic_Object_Decoding>. The fMRI data were saved according to the BrainDecoderToolbox2 format <https://github.com/KamitaniLab/BrainDecoderToolbox2>.
 
-For copyright reasons, we do not make the visual images used in our experiments publicly available on our server. You can find the visual images from the ImageNet database (2011, fall release; <http://image-net.org/download-imageurls>) using the synset ID and image ID listed in imageID_training.csv and imageID_test.csv files. The image ID is formatted as nxxxx_yyyy, where xxxx represents the WordNet ID (wnid) and yyyy represents the image ID. We will provide a script to automatically download images from the ImageNet in future.
+For copyright reasons, we do not make the visual images used in our experiments publicly available on our server. You can directly download the images from URLs listed in the imageURL_training.txt and imageURL_test.txt. 
+While most of the images can be donwloaded from the URL, some of the images have been deleted from the original URLs. In that case, you can find the visual images from the ImageNet database (2011, fall release; <http://image-net.org/download-imageurls>) using the synset ID and image ID listed in imageID_training.csv and imageID_test.csv files. The image ID is formatted as nxxxx_yyyy, where xxxx represents the WordNet ID (wnid) and yyyy represents the image ID. We will provide a script to automatically download images from the ImageNet in future.
 
 ## Demo code
 Currently, the codes used in the present study are available from the authors upon request. We will make the codes openly available soon.
