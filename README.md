@@ -11,7 +11,7 @@ For copyright reasons, we do not make the visual images used in our experiments 
 
 While most of the images can be downloaded from the URLs, some of the images have been deleted from the original URLs. In that case, you need to create your account for the ImageNet (<http://image-net.org/index>)  to download the image set for each synset (2011, fall release; <http://image-net.org/download-images>), and search corresponding images using the synset ID and image ID listed in imageID_training.csv and imageID_test.csv files. The image filename is formatted as xxxx_yyyy, where xxxx represents the WordNet synset ID and yyyy represents the image ID.
 
-Please contact us (brainliner-admin@atr.jp) if you have trouble with the above method, so that we will help you obtaining the images. 
+Please contact us (kamitanilab.contact@gmail.com) if you have trouble with the above method, so that we will help you obtaining the images. 
 
 ## Demo codes
 Currently, the codes used in the present study are available from the authors upon request. We will make the codes openly available soon.
