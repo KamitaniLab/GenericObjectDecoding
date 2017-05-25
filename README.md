@@ -1,7 +1,7 @@
 # Generic Object Decoding
 
 This repository contains the data and demo codes for replicating results in our paper: Horikawa, Kamitani "Generic decoding of seen and imagined objects using hierarchical visual features".
-The generic object decoding approach enabled decoding of arbitrary object categories including those not used in model training. For more technical details, please refer to the paper: <https://arxiv.org/abs/1510.06479>.
+The generic object decoding approach enabled decoding of arbitrary object categories including those not used in model training. For more technical details, please refer to the paper: <https://www.nature.com/articles/ncomms15037>.
 
 ## Data (fMRI data and visual features)
 The fMRI data for five subjects (training, test_perception, and test_imagery) and visual features (CNN1-8, HMAX1-3, GIST, and SIFT) are avairable from <http://brainliner.jp/data/brainliner/Generic_Object_Decoding>. The fMRI data were saved according to the BrainDecoderToolbox2 format <https://github.com/KamitaniLab/BrainDecoderToolbox2>.
