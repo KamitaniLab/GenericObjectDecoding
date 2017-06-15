@@ -32,8 +32,9 @@ function images = get_expStimImages_from_imagenet(username, accessKey)
 %% Settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % List of CSV files which contains image IDs and image file names
-imageListFiles = {'./data/images/image_training_id.csv', ...
-                  './data/images/image_test_id.csv'};
+% CSV files are available from http://brainliner.jp/data/brainliner/Generic_Object_Decoding
+imageListFiles = {'./data/images/imageID_training.csv', ...
+                  './data/images/imageID_test.csv'};
 
 % Type of images ('training' or 'test')
 % This should correspond to 'imageListFiles'
