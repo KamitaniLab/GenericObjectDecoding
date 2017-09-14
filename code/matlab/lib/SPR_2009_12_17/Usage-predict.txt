@@ -1,0 +1,146 @@
+% --- Usage of sparse regression
+
+Please see 'testjob.m ' to know how to use this program
+
+Several leaning methods are implemented in this tool.
+It is possible to combine different methods sequentially,
+and retrain the estimation model starting from old results.
+
+% --- Installation
+1. unzip the zipped file to appropriate place
+
+2. Make MEX file
+ run 'mex_compile' at the directory 'mex_prog'
+
+3. set path to the unzipped directory of this program
+example script: set_path.m
+
+% --- Test program run
+testjob:
+
+% --- Training data format
+We assume the following 3D-array data format for input and output data.
+If there is only one trial, the data can be 2D matrix.
+
+　xdata : Xdim x Time x Ntrial
+　ydata : Ydim x Time x Ntrial
+
+% --- Time delay embedding 
+In the previous version, time delay embedding was done before estimation.
+When input dimension becomes large, this requres huge amount of memory.
+Therefore, embedding was done in the estimation program in new programs.
+All the data without embedding must be loaded in memory before estimation.
+However, 'linear_map_sparse_cov' still require embedded input.
+
+% --- MEX-C program
+MEX-C program is made for time consuming calculation in time embedded space. 
+
+% ---　Recommended methods
+The following learning methods are recommended for general use.
+
+[1] When the input spatial dimension is less than several thousand, 
+please try  'linear_sparse_space'
+Total input dimension (=Xdim * Dtau) can be much larger
+
+[2] When the input spatial dimension is larger than several thousand, 
+please try  'linear_sparse_stepwise'
+
+% --- Meaning of main parameters
+parm.Ntrain =  # of total training iteration
+parm.Nskip  =  skip steps for display info
+parm.Npre_train =  # of stable training iteration at beggining of training
+parm.Npre_train = 0 speed up the training, but sometimes become unstable
+
+% --- Time delay embedding parameter for prediction
+parm.Tpred     = Prediction time step : y(t+Tpred) = W * x(t)
+parm.Tau       = Lag time
+parm.Dtau      = Number of embedding dimension
+
+Time delay embedding is done in the learning program.
+
+% --- Normalization
+parm.data_norm = 0 : mean = 0, no variance normalization
+parm.data_norm = 1 : mean = 0, variance = 1
+
+Normalization is done in 'normalize_data'.
+You can make your own program for normalization.
+
+・Normalization function
+　(１)normalize data by thier own mean & variance
+	% Normalize input data
+	[X,nparm] = normalize_data(xdata, parm.data_norm);
+	parm.xmean = nparm.xmean; %  mean of xdata 
+	parm.xnorm = nparm.xnorm; %  std (root of variance) of xdata
+	
+	% Normalize output data
+	[Y,nparm] = normalize_data(ydata, parm.data_norm);
+	parm.ymean = nparm.xmean;
+	parm.ynorm = nparm.xnorm;
+
+　(２)normalize data by a given value in 'parm.xmean' & 'parm.xnorm'
+　　  xtest = normalize_data(xtest, parm.data_norm, parm)
+      This is done for test data.
+
+% --- Prediction for new data
+xtest = normalize_data(xtest, parm.data_norm, parm)
+ypred = predict_output(xtest, Model, parm);
+
+	Time delay embedding for X is done in predict_output
+	X must be normalized as the same way as training data
+	   using parm.xmean & parm.xnorm calculated from training data
+
+%  Y = predict_output(X, Model)
+%    = Model.W * X
+%  Y = predict_output(X, Model, parm)
+%    = (Model.W * X) * (parm.ynorm) + (parm.ymean)
+% --- Input
+%  X  : Input data  ( M x T x Ntrial)
+%  M  =  # of input (original input space dimension)
+%  T  =  # of time sample
+% parm.Tau       = Lag time
+% parm.Dtau      = Number of embedding dimension
+% parm.ymean
+% parm.ynorm
+
+%%%%%%%%%%%%%%%%%%%%% Detail of leaning method %%%%%%%%%%%%%%%%%%%
+Several leaning methods are implemented in this tool.
+It is possible to combine different methods sequentially,
+and retrain the estimation model starting from old results.
+
+% ----- Covariance method -----
+'linear_map_sparse_cov';  (Covariance method)
+% This is the standard sparse regression method using inverse covariance 
+% This method introduce sparse condition both for space & time dimension
+% This require embedded input (old version)
+
+'linear_sparse_space';   (Space covariance method)
+% This method introduce sparse condition only for spatial dimension
+% but not for temporal dimension (: temporal dimension is not pruned).
+% This method is the first choice
+% when input spatial dimension is less than several thousand, 
+
+% ----- Sequential/Stepwise method -----
+'linear_sparse_stepwise'; (Stepwise method)
+% Stepwise method maximize the free energy coordinate by coordinate.
+% This method introduce sparse condition only for spatial dimension
+% but not for temporal dimension (: temporal dimension is not pruned).
+% This can be applicable for more than 10000 total dimension.
+
+'linear_sparse_seq';      (Sequential method)
+% This sequential method increases effective input dimension one by one
+% This method introduce sparse condition both for space & time dimension
+% This becomes very slow for more than 10000 total dimension.
+
+% --- Parameters to control degree of sparsity
+parm.a_min = 1e-10;	% Minimum value for weight pruning
+
+% --- Free energy convergence check parameters
+parm.Fdiff  = 1e-10;  % Threshold for free energy difference
+parm.Ncheck = 100;	% Minimum number of training iteration
+parm.Fstep  = 50;	% Free energy convergence check step
+
+% --- Retraining
+Retraining can be done, by loading old result's variable 'Model'
+
+2009-3-14 Masa-aki Sato
+

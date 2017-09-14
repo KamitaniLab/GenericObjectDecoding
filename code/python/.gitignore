@@ -1,0 +1,9 @@
+.python-version
+*.pyc
+*.lprof
+*.tar.gz
+obsoleted
+results
+results_*
+tmp
+lib

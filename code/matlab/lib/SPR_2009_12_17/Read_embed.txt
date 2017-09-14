@@ -1,0 +1,43 @@
+■時間埋め込み
+% Delay embedding for input-output prediction
+
+%  Time index for delay embedding prediction
+%  [tx,ty,T] = pred_time_index(x,parm)
+% --- Input
+% x : Input data  : Xdim x Tsample x Ntrial
+% parm : Time delay embedding parameter
+% parm.Tau       = Lag time
+% parm.Dtau      = Number of embedding dimension
+% parm.Tpred     = Prediction time step :
+%                  y(t+Tpred) = W * [x(t); ...; x(t-Tdelay)]
+%                  ydata(t)   = W * xdata(t)
+% --- Output
+%	%  Time period for prediction
+%	T  = Ndata - Tpred - Tdelay;  Tdelay = Tau * (Dtau - 1)
+%	tx = 1:(Ndata-Tpred);
+%	ty = (Tpred+Tdelay+1):Ndata;
+%
+% X(1:Tdelay+1) -> Y(Tdelay + Tpred + 1)
+%
+% ydata(:,1:T)  =   y(:,ty)
+% xdata(:,1:T+Tdelay) = x(:,tx);
+
+元の入力変数 x(t) と、埋め込み変数 xdata(t) や出力変数 ydata(t)との間に
+時間のずれがあることに注意して下さい。
+
+■例
+ Tau   = 2
+ Dtau  = 2
+ Tpred = 1
+
+ ydata(t) t =                    1    2    3    4    5    6    7
+ xdata(t) t =               1    2    3    4    5    6    7    8
+              ----|----|----|----|----|----|----|----|----|----|
+  x(tx)  tx =     1    2    3    4    5    6    7    8    9    10
+
+xdata(1) = [x(3); x(1)]
+xdata(2) = [x(4); x(2)]
+
+...
+ydata(1) = y(4)
+ydata(2) = y(5)
