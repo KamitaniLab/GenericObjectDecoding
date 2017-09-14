@@ -17,7 +17,7 @@ For easier access to the stimulus images used in our study, we provide a matlab 
 
 Please contact us (kamitanilab.contact@gmail.com) if you have trouble with the above method, so that we will help you obtaining the images. 
 
-## Demo code
+## Demo program
 
-Demo code for [Matlab](code/matlab/) and [Python](code/python/) are available.
-See README.md in each direcotry (<code/matlab/README.md> and <code/python/README.md> for the details.
+Demo programs for Matlab and Python are available in [code/matlab](code/matlab/) and [code/python](code/python), respectively.
+See README.md in each direcotry for the details.
