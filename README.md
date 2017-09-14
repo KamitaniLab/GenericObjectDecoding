@@ -20,4 +20,4 @@ Please contact us (kamitanilab.contact@gmail.com) if you have trouble with the a
 ## Demo program
 
 Demo programs for Matlab and Python are available in [code/matlab](code/matlab/) and [code/python](code/python), respectively.
-See README.md in each direcotry for the details.
+See README.md in each directory for the details.
