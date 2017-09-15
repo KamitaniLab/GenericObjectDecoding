@@ -7,7 +7,7 @@ This is Python code for Generic Decoding Demo.
 All scripts are tested with Python 2.7.13.
 The following packages are required.
 
-- bdpy
+- [bdpy](https://github.com/KamitaniLab/bdpy)
 - numpy
 - scipy
 - pandas
@@ -15,8 +15,6 @@ The following packages are required.
 - matplotlib (mandatory for creating figures)
 - caffe (mandatory if you calculate image and category features by yourself)
 - PIL (mandatory if you calculate image and category features by yourself)
-
-`bdpy` is an in-house library and will be publicly available soon.
 
 ## Data organization
 
