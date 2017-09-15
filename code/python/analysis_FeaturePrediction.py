@@ -14,7 +14,6 @@ from time import time
 import numpy as np
 from slir import SparseLinearRegression
 
-sys.path.append('lib/bdpy') # Path to bdpy
 import bdpy
 from bdpy.preproc import select_top
 from bdpy.ml import add_bias

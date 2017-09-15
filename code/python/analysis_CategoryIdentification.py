@@ -12,7 +12,6 @@ from itertools import product
 
 import numpy
 
-sys.path.append('lib/bdpy') # Path to bdpy
 import bdpy
 from bdpy.stats import corrmat
 from bdpy.dataform import convert_dataframe

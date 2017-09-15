@@ -7,7 +7,6 @@ import pickle
 
 import numpy as np
 
-sys.path.append('lib/bdpy') # Path to bdpy
 import bdpy
 
 
