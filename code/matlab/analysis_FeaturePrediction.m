@@ -24,13 +24,6 @@ featureList  = {'cnn1', 'cnn2', 'cnn3', 'cnn4', ...
                 'cnn5', 'cnn6', 'cnn7', 'cnn8', ...
                 'hmax1', 'hmax2', 'hmax3', 'gist', 'sift'};
 
-% For tests
-%subjectList  = {'Subject1'};
-%dataFileList = {'Subject1.mat'};
-%roiList      = {'V1', 'V2'};
-%numVoxelList = {500, 500};
-%featureList  = {'cnn1', 'cnn2', 'cnn3'};
-
 % Image feature data
 imageFeatureFile = 'ImageFeatures.mat';
 
@@ -222,16 +215,16 @@ for n = 1:size(analysisParam, 1)
         %% Match training features to labels
         trainFeat = get_refdata(trainFeat, trainImageIds, trainLabels);
 
-        %% Preprocessing
+        %% Preprocessing (normalization of image features)
         [trainFeat, yMean, yNorm] = zscore(trainFeat);
 
-        %% Feature (voxel) selection based on f-values
+        %% Preprocessing (voxel selection based on correlation)
         cor = fastcorr(trainData, trainFeat);
         [xTrain, selInd] = select_top(trainData, abs(cor), nVox);
         xTestPercept = testPerceptData(:, selInd);
         xTestImagery = testImageryData(:, selInd);
     
-        %% Add bias terms and rotate matrixes for SLR functions
+        %% Add bias terms and transpose matrixes for SLR functions
         xTrain = add_bias(xTrain)';
         xTestPercept = add_bias(xTestPercept)';
         xTestImagery = add_bias(xTestImagery)';

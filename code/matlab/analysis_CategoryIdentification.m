@@ -20,11 +20,6 @@ featureList = {'cnn1', 'cnn2', 'cnn3', 'cnn4', ...
                'hmax1', 'hmax2', 'hmax3', 'gist', 'sift'};
 roiList     = {'V1', 'V2', 'V3', 'V4', 'FFA', 'LOC', 'PPA', 'LVC', 'HVC',  'VC'};
 
-% For tests
-%subjectList  = {'Subject1'};
-%roiList      = {'V1', 'V2'};
-%featureList  = {'cnn1', 'cnn2', 'cnn3'};
-
 % Image feature data
 imageFeatureFile = 'ImageFeatures.mat';
 
