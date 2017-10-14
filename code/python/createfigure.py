@@ -1,237 +1,164 @@
-'''
-Create figures for Generic Decoding Demo
+'''Create figures for results of classification_pairwise'''
 
-This file is a part of GenericDecoding_demo.
-'''
 
+from __future__ import print_function
 
 import os
 import pickle
-from itertools import product
 
 import numpy as np
-import scipy.stats as scst
+import pandas as pd
+import scipy.stats as st
 import matplotlib.pyplot as plt
 
+import bdpy.fig as bfig
 
-## Data settings ###############################################################
-
-result_dir = './results_matconvnet'
-result_featpred = 'FeaturePrediction.pkl'
-result_catident = 'CategoryIdentification.pkl'
+import god_config as config
 
 
-## Figure settings #############################################################
+# Main #################################################################
 
-fig_save_dir = './results_matconvnet'
+def main():
+    results_file = config.results_file
+    output_file_featpred = os.path.join('results', config.analysis_name + '_featureprediction.pdf')
+    output_file_catident = os.path.join('results', config.analysis_name + '_categoryidentification.pdf')
 
-figsize = (2 * 11.69, 2 * 8.27) # A3 landscape
-figdpi = 100
-fontsize = 9
+    roi_label = config.roi_labels
 
-barwidth = 0.8
+    # Load results -----------------------------------------------------
+    with open(results_file, 'rb') as f:
+        print('Loading %s' % results_file)
+        results = pickle.load(f)
 
-# Matconvnet
-subplot_pos_offset = {'cnn1' : 0, 'cnn2' : -6, 'cnn3' : -12, 'cnn4' : -18,
-                      'cnn5' : -24, 'cnn6' : -30, 'cnn7' : -36, 'cnn8' : -42,
-                      'hmax1' : 1, 'hmax2' : -5, 'hmax3' : -11, 'gist' : -17, 'sift' : -23}
-# Caffe
-# subplot_pos_offset = {'conv1' : 0, 'conv2' : -6, 'conv3' : -12, 'conv4' : -18,
-#                       'conv5' : -24, 'fc6' : -30, 'fc7' : -36, 'fc8' : -42}
+    # Figure settings
+    plt.rcParams['font.size'] = 8
 
-figure_list = ('featpred', 'catident')
+    # Plot (feature prediction) ----------------------------------------
+    fig = plt.figure(figsize=[2 * 11.69, 2 * 8.27], dpi=100)
 
-figure_filename = {'featpred' : 'FeaturePredictionAccuracy.pdf',
-                   'catident' : 'IdentificationAccuracy.pdf'}
+    subplotpos_image = [43, 37, 31, 25, 19, 13, 7, 1, 44, 38, 32, 26, 20]
+    subplotpos_catpt = [45, 39, 33, 27, 21, 15, 9, 3, 46, 40, 34, 28, 22]
+    subplotpos_catim = [47, 41, 35, 29, 23, 17, 11, 5, 48, 42, 36, 30, 24]
 
-plot_type_list = {'featpred' : ['image_seen', 'category_seen', 'category_imagined'],
-                  'catident' : ['seen', 'imagined']}
+    # Image
+    plotresults(fig, results, value_key='mean_profile_correlation_image',
+                roi_label=roi_label, subplot_index=subplotpos_image,
+                caption='image_seen; ', ylabel='Corr. coef.', ylim=[-0.2, 0.6], ytick=[-0.2, 0, 0.2, 0.4])
 
-plot_types = {'image_seen' : {'subplot_base_pos' : 43,
-                              'subplot_pos_offset' : subplot_pos_offset,
-                              'data' : 'predacc_image_percept',
-                              'color' : '0.4',
-                              'ylabel' : 'Corr. coeff.',
-                              'ylim' : (-0.2, 0.6),
-                              'yticks' : [-0.2, 0, 0.2, 0.4, 0.6],
-                              'ylinecolor' : 'gray',
-                              'baseline' : 'off',
-                              'basevalue' : 0,
-                              'basecolor' : 'black',
-                              'caption_pos' : [0.5, -0.1]},
-              'category_seen' : {'subplot_base_pos' : 45,
-                                 'subplot_pos_offset' : subplot_pos_offset,
-                                 'data' : 'predacc_category_percept',
-                                 'color' : '0.4',
-                                 'ylabel' : 'Corr. coeff.',
-                                 'ylim' : (-0.2, 0.6),
-                                 'yticks' : [-0.2, 0, 0.2, 0.4, 0.6],
-                                 'ylinecolor' : 'gray',
-                                 'baseline' : 'off',
-                                 'basevalue' : 0,
-                                 'basecolor' : 'black',
-                                 'caption_pos' : [0.5, -0.1]},
-              'category_imagined' : {'subplot_base_pos' : 47,
-                                     'subplot_pos_offset' : subplot_pos_offset,
-                                     'data' : 'predacc_category_imagery',
-                                     'color' : '0.8',
-                                     'ylabel' : 'Corr. coeff.',
-                                     'ylim' : (-0.2, 0.4),
-                                     'yticks' : [-0.2, 0, 0.2, 0.4],
-                                     'ylinecolor' : 'gray',
-                                     'baseline' : 'on',
-                                     'basevalue' : 50,
-                                     'basecolor' : 'black',
-                                     'caption_pos' : [0.5, -0.1]},
-              'seen' : {'subplot_base_pos' : 44,
-                        'subplot_pos_offset' : subplot_pos_offset,
-                        'data' : 'correct_rate_percept_ave',
-                        'color' : '0.4',
-                        'ylabel' : 'Accuracy (%)',
-                        'ylim' : (40, 100),
-                        'yticks' : [40, 60, 80, 100],
-                        'ylinecolor' : 'gray',
-                        'baseline' : 'on',
-                        'basevalue' : 50,
-                        'basecolor' : 'black',
-                        'caption_pos' : [0.5, 95]},
-              'imagined' : {'subplot_base_pos' : 46,
-                            'subplot_pos_offset' : subplot_pos_offset,
-                            'data' : 'correct_rate_imagery_ave',
-                            'color' : '0.8',
-                            'ylabel' : 'Accuracy (%)',
-                            'ylim' : (40, 100),
-                            'yticks' : [40, 60, 80, 100],
-                            'ylinecolor' : 'gray',
-                            'baseline' : 'on',
-                            'basevalue' : 50,
-                            'basecolor' : 'black',
-                            'caption_pos' : [0.5, 95]}}
+    # Category, seen
+    plotresults(fig, results, value_key='mean_profile_correlation_cat_percept',
+                roi_label=roi_label, subplot_index=subplotpos_catpt,
+                caption='category_seen; ', ylabel='Corr. coef.', ylim=[-0.2, 0.6], ytick=[-0.2, 0, 0.2, 0.4])
+
+    # Category, imagined
+    plotresults(fig, results, value_key='mean_profile_correlation_cat_imagery',
+                roi_label=roi_label, subplot_index=subplotpos_catim,
+                barcolor=[0.8, 0.8, 0.8],
+                caption='category_imagined; ', ylabel='Corr. coef.', ylim=[-0.2, 0.6], ytick=[-0.2, 0, 0.2, 0.4])
+
+    # Draw path to the script
+    fpath = os.path.abspath(__file__)
+    bfig.draw_footnote(fig, fpath)
+
+    # Save the figure
+    plt.savefig(output_file_featpred)
+    print('Saved %s' % output_file_featpred)
+
+    plt.show()
+
+    # Plot (category identification) -----------------------------------
+    fig = plt.figure(figsize=[2 * 11.69, 2 * 8.27], dpi=100)
+
+    subplotpos_percept = [44, 38, 32, 26, 20, 14, 8, 2, 45, 39, 33, 27, 21]
+    subplotpos_imagery = [46, 40, 34, 28, 22, 16, 10, 4, 47, 41, 35, 29, 23]
+
+    # Image
+    plotresults(fig, results, value_key='catident_correct_rate_percept',
+                roi_label=roi_label, subplot_index=subplotpos_percept,
+                caption='seen; ', ylabel='Accuracy', ylim=[0.4, 1.0], ytick=[0.4, 0.6, 0.8, 1.0], textpos=[0, 0.92])
+
+    # Category, seen
+    plotresults(fig, results, value_key='catident_correct_rate_imagery',
+                roi_label=roi_label, subplot_index=subplotpos_imagery,
+                barcolor=[0.8, 0.8, 0.8],
+                caption='imagined; ', ylabel='Accuracy', ylim=[0.4, 1.0], ytick=[0.4, 0.6, 0.8, 1.0], textpos=[0, 0.92])
+
+    # Draw path to the script
+    fpath = os.path.abspath(__file__)
+    bfig.draw_footnote(fig, fpath)
+
+    # Save the figure
+    plt.savefig(output_file_catident)
+    print('Saved %s' % output_file_catident)
+
+    plt.show()
 
 
-## Functions ###################################################################
+# Functions ############################################################
 
-def draw_plots(fig, plots, nrow=8, ncol=6):
-    '''
-    Draw plots on a figure
-    '''
+def plotresults(fig, results, value_key='', roi_label=[], feature_label=[],
+                subplot_index=[], caption='', barcolor=[0.4, 0.4, 0.4],
+                ylabel='', ylim=[-1, 1], ytick=[], textpos=[0, -0.12]):
+    '''Draw results of feature prediction'''
 
-    for plot in plots:
-        ax = fig.add_subplot(nrow, ncol, plot['subplot_position'])
+    # Get mean and confidence interval ---------------------------------
+    tb_mean = pd.pivot_table(results, index=['roi'], columns=['feature'],
+                             values=[value_key], aggfunc=np.mean)
+    tb_sem = pd.pivot_table(results, index=['roi'], columns=['feature'],
+                            values=[value_key], aggfunc=st.sem)
+    tb_num = pd.pivot_table(results, index=['roi'], columns=['feature'],
+                            values=[value_key], aggfunc=len)
 
-        if plot['plot_type'] == 'bar':
-            ax.bar(plot['xdata'], plot['ydata'], yerr=plot['yerr'],
-                   width=plot['barwidth'], color=plot['color'], ecolor='black')
-        else:
-            raise ValueError('Unknown plot type')
+    tb_mean = tb_mean.reindex(index=roi_label)
+    tb_sem = tb_sem.reindex(index=roi_label)
+    tb_num = tb_num.reindex(index=roi_label)
 
-        if 'ylinecolor' in plot:
-            xlim = ax.get_xlim()
-            [ax.plot(xlim, (y, y), '-', color=plot['ylinecolor']) for y in plot['yticks']]
+    ci = st.t.interval(1 - 0.05, tb_num, loc=tb_mean, scale=tb_sem)
+    tb_yerr = (tb_mean - ci[0], ci[1] - tb_mean)
 
-        if plot['baseline'] == 'on':
-            xlim = ax.get_xlim()
-            baseval = plot['basevalue']
-            ax.plot(xlim, (baseval, baseval), '-', color=plot['basecolor'])
+    # Plot -------------------------------------------------------------
+    xpos = range(len(roi_label))
 
-        if 'caption' in plot:
-            ax.text(plot['caption_position'][0], plot['caption_position'][1],
-                    plot['caption'], va='top', ha='left', size=fontsize)
+    for feat, si in zip(tb_mean, subplot_index):
+        plt.subplot(8, 6, si)
 
-        box_off(ax)
-        if 'xlabel' in plot:      ax.set_xlabel(plot['xlabel'], size=fontsize)
-        if 'xlim' in plot:        ax.set_xlim(plot['xlim'])
-        if 'xticks' in plot:      ax.set_xticks(plot['xticks'])
-        if 'xticklabels' in plot: ax.set_xticklabels(plot['xticklabels'], size=fontsize)
-        if 'ylabel' in plot:      ax.set_ylabel(plot['ylabel'], size=fontsize)
-        if 'ylim' in plot:        ax.set_ylim(plot['ylim'])
-        if 'yticks' in plot:      ax.set_yticks(plot['yticks'])
-        if 'yticklabels' in plot: ax.set_yticklabels(plot['yticklabels'], size=fontsize)
+        # Draw results
+        y = tb_mean[feat]
+        yerr = (tb_yerr[0][feat], tb_yerr[1][feat])
+        plt.bar(xpos, y, align='center',
+                color=barcolor, edgecolor=barcolor,
+                linewidth=2,
+                yerr=yerr, ecolor='k', capsize=0)
 
-    fig.tight_layout()
-    fig.show()
-    return fig
+        # Draw 'feature' name
+        feat_name = caption + feat[1]
+        plt.text(textpos[0], textpos[1], feat_name, fontsize=12)
+
+        # Modify x and y axes
+        plt.xticks(xpos, roi_label)
+        plt.xlim([-0.5, len(xpos) - 0.5])
+
+        plt.ylabel(ylabel)
+        plt.yticks(ytick)
+        plt.ylim(ylim)
+
+        bfig.box_off(plt.gca())
+
+        # Remove ticks on x and y axes
+        plt.gca().xaxis.set_ticks_position('none')
+        plt.gca().yaxis.set_ticks_position('none')
+
+        # Horizontal grid lines
+        plt.gca().yaxis.grid(True, linestyle='-', linewidth=1, color='gray')
+        plt.gca().set_axisbelow(True)
+
+    # Adjust subplots
+    plt.subplots_adjust(wspace=0.4, hspace=0.2)
 
 
-def box_off(ax):
-    '''
-    Remove top and right axes (`box off` in Matlab)
-    '''
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
-
-
-## Main ########################################################################
+# Run as a scirpt ######################################################
 
 if __name__ == '__main__':
-
-    ## Load results
-    with open(os.path.join(result_dir, result_featpred), 'rb') as f:
-        res_featpred = pickle.load(f)
-
-    with open(os.path.join(result_dir, result_catident), 'rb') as f:
-        res_catident = pickle.load(f)
-
-    ## Get subjects, ROIs and features lists
-    subject_list = res_featpred.subject.unique()
-    roi_list = res_featpred.roi.unique()
-    feature_list = res_featpred.feature.unique()
-
-    num_sbj = len(subject_list)
-
-    ## Figure loop
-    for figtype in figure_list:
-        pt_list = plot_type_list[figtype]
-
-        ## Create plot information
-        plots = []
-        for pt_key, feat in product(pt_list, feature_list):
-            pt = plot_types[pt_key]
-
-            if figtype == 'featpred':
-                ydata = [res_featpred.query('feature == @feat and roi == @roi')[pt['data']].mean() for roi in roi_list]
-                ystd = [res_featpred.query('feature == @feat and roi == @roi')[pt['data']].std() for roi in roi_list]
-            elif figtype == 'catident':
-                ydata = [100 * res_catident.query('feature == @feat and roi == @roi')[pt['data']].mean() for roi in roi_list]
-                ystd = [100 * res_catident.query('feature == @feat and roi == @roi')[pt['data']].std() for roi in roi_list]
-            else:
-                raise ValueError('Unknown plot type')
-
-            yerr = [scst.t.ppf(1 - 0.05, num_sbj - 1) * i for i in ystd / np.sqrt(num_sbj)]
-
-            # Draw x tick labels (ROI) only at bottom plots
-            xticklabels = roi_list if feat == 'cnn1' or feat == 'hmax1' else ''
-
-              # Make plot information
-            plots.append({'plot_type' : 'bar',
-                          'xdata' : np.arange(len(ydata)) + 0.5 - barwidth / 2,
-                          'xticks' : np.arange(len(ydata)) + 0.5,
-                          'xticklabels' : xticklabels,
-                          'ydata' : ydata,
-                          'yerr' : yerr,
-                          'ylabel' : pt['ylabel'],
-                          'ylim' : pt['ylim'],
-                          'yticks' : pt['yticks'],
-                          'yticklabels' : [str(i) for i in pt['yticks']],
-                          'ylinecolor' : pt['ylinecolor'],
-                          'baseline' : pt['baseline'],
-                          'basevalue' : pt['basevalue'],
-                          'basecolor' : pt['basecolor'],
-                          'caption' : '%s; %s' % (pt_key, feat),
-                          'caption_position' : pt['caption_pos'],
-                          'subplot_position' : pt['subplot_base_pos'] + pt['subplot_pos_offset'][feat],
-                          'barwidth' : barwidth,
-                          'color' : pt['color']})
-
-        ## Make a figure
-        fig = plt.figure(figsize=figsize, dpi=figdpi)
-
-        ## Draw plots
-        draw_plots(fig, plots)
-
-        ## Save a figure
-        save_file = os.path.join(fig_save_dir, figure_filename[figtype])
-        fig.savefig(save_file, format='pdf')
+    # To avoid any use of global variables,
+    # do nothing except calling main() here
+    main()

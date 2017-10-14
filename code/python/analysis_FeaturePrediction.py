@@ -1,276 +1,304 @@
-'''
-Feature prediction
+'''Generic Object Decoding: Feature prediction
 
-This file is a part of GenericDecoding_demo.
+Analysis summary
+----------------
+
+- Learning method:   Sparse linear regression
+- Preprocessing:     Normalization and voxel selection
+- Data:              GenericDecoding_demo
+- Results format:    Pandas dataframe
 '''
 
+
+from __future__ import print_function
 
 import os
-import pickle
 import sys
+import pickle
 from itertools import product
 from time import time
 
 import numpy as np
+import pandas as pd
+from scipy import stats
+
 from slir import SparseLinearRegression
+from sklearn.linear_model import LinearRegression  # For quick demo
 
 import bdpy
-from bdpy.preproc import select_top
+from bdpy.bdata import concat_dataset
 from bdpy.ml import add_bias
+from bdpy.preproc import select_top
 from bdpy.stats import corrcoef
-from bdpy.dataform import convert_dataframe
+from bdpy.util import makedir_ifnot, get_refdata
+from bdpy.dataform import append_dataframe
+from bdpy.distcomp import DistComp
 
-import gd_parameters as gd
-from gd_features import Features
-
-
-#----------------------------------------------------------------------#
-# Global settings                                                      #
-#----------------------------------------------------------------------#
-
-analysis_name = __file__
-
-data_dir = gd.data_dir
-subject_list = gd.subject_list
-roi_list = gd.roi_list
-nvox_list = gd.nvox_list
-feature_file = gd.feature_file
-feature_type = gd.feature_type
-result_dir = gd.result_dir
-num_itr = gd.num_itr
+import god_config as config
 
 
-#----------------------------------------------------------------------#
-# Functions                                                            #
-#----------------------------------------------------------------------#
+# Functions ############################################################
 
-def predict_feature_unit(analysis):
-    '''Run feature prediction for each unit
+def feature_prediction(x_train, y_train, x_test, y_test, n_voxel=500, n_iter=200):
+    '''Run feature prediction
 
     Parameters
     ----------
-    analysis : dict
-        Analysis parameters. This contains the following items:
-            - subject
-            - roi
-            - num_voxel
-            - feature
-            - unit
-            - num_test_category
-            - ardreg_num_itr
+    x_train, y_train : array_like [shape = (n_sample, n_voxel)]
+        Brain data and image features for training
+    x_test, y_test : array_like [shape = (n_sample, n_unit)]
+        Brain data and image features for test
+    n_voxel : int
+        The number of voxels
+    n_iter : int
+        The number of iterations
 
     Returns
     -------
-    dict
-        Results dictionary. This contains the following items:
-            - subject
-            - roi
-            - feature
-            - unit
-            - predict_percept
-            - predict_imagery
-            - predict_percept_ave
-            - predict_imagery_ave
+    predicted_label : array_like [shape = (n_sample, n_unit)]
+        Predicted features
+    ture_label : array_like [shape = (n_sample, n_unit)]
+        True features in test data
     '''
 
-    ## Set analysis parameters -------------
-    num_voxel = analysis['num_voxel']
-    unit = analysis['unit']
-    nitr = analysis['ardreg_num_itr']
+    n_unit = y_train.shape[1]
 
-    print 'Unit %d' % unit
+    # Normalize brian data (x)
+    norm_mean_x = np.mean(x_train, axis=0)
+    norm_scale_x = np.std(x_train, axis=0, ddof=1)
 
-    ## Get data ----------------------------
+    x_train = (x_train - norm_mean_x) / norm_scale_x
+    x_test = (x_test - norm_mean_x) / norm_scale_x
 
-    ## Get brain data for training, test (perception), and test (imagery)
-    ind_tr = data_type == 1
-    ind_te_p = data_type == 2
-    ind_te_i = data_type == 3
+    # Feature prediction for each unit
+    print('Running feature prediction')
 
-    data_train = data[ind_tr, :]
-    data_test_percept = data[ind_te_p, :]
-    data_test_imagery = data[ind_te_i, :]
+    y_true_list = []
+    y_pred_list = []
 
-    label_train = data_label[ind_tr]
-    label_test_percept = data_label[ind_te_p]
-    label_test_imagery = data_label[ind_te_i]
+    for i in range(n_unit):
 
-    ## Get image features for training
-    ind_feat_tr = feature_type == 1
-    feature_train = feature[ind_feat_tr, unit - 1]
-    feature_label_train = feature_label[ind_feat_tr]
-
-    ## Match training features to labels
-    feature_train = bdpy.get_refdata(feature_train, feature_label_train, label_train)
-
-    ## Preprocessing -----------------------
-
-    ## Normalize data
-    data_train_mean = np.mean(data_train, axis=0)
-    data_train_std = np.std(data_train, axis=0, ddof=1)
-
-    data_train_norm = (data_train - data_train_mean) / data_train_std
-    data_test_percept_norm = (data_test_percept - data_train_mean) / data_train_std
-    data_test_imagery_norm = (data_test_imagery - data_train_mean) / data_train_std
-
-    feature_train_mean = np.mean(feature_train, axis=0)
-    feature_train_std = np.std(feature_train, axis=0, ddof=1)
-
-    if feature_train_std == 0:
-        feature_train_norm = feature_train - feature_train_mean
-    else:
-        feature_train_norm = (feature_train - feature_train_mean) / feature_train_std
-
-    ## Voxel selection based on correlation
-    corr = corrcoef(feature_train_norm, data_train_norm, var='col')
-
-    data_train_norm, select_ind = select_top(data_train_norm, np.abs(corr),
-                                             num_voxel, axis=1, verbose=False)
-
-    data_test_percept_norm = data_test_percept_norm[:, select_ind]
-    data_test_imagery_norm = data_test_imagery_norm[:, select_ind]
-
-    ## Add bias term
-    data_train_norm = add_bias(data_train_norm, axis=1)
-    data_test_percept_norm = add_bias(data_test_percept_norm, axis=1)
-    data_test_imagery_norm = add_bias(data_test_imagery_norm, axis=1)
-
-    ## Decoding ----------------------------
-
-    if feature_train_std == 0:
-        predict_percept_norm = np.zeros(data_test_percept.shape[0], feature_train_norm[1])
-        predict_imagery_norm = np.zeros(data_test_imagery.shape[0], feature_train_norm[1])
-
-    else:
-        model = SparseLinearRegression(n_iter=nitr, prune_mode=1)
-
-        ## Model training
-        #import pdb; pdb.set_trace()
-        model.fit(data_train_norm, feature_train_norm)
-
-        ## Image feature preiction (percept & imagery)
-        predict_percept_norm = model.predict(data_test_percept_norm)
-        predict_imagery_norm = model.predict(data_test_imagery_norm)
-
-    # De-normalize predicted features
-    predict_percept = predict_percept_norm * feature_train_std + feature_train_mean
-    predict_imagery = predict_imagery_norm * feature_train_std + feature_train_mean
-
-    ## Average prediction results for each test category
-    # [Note]
-    # Image IDs (labels) is '<category_id>.<image_id>'
-    # (e.g., '123456.7891011' is 'image 7891011 in category 123456').
-    # Thus, the integer part of `label` represents the category ID.
-    cat_te_p = np.floor(label_test_percept)
-    cat_te_i = np.floor(label_test_imagery)
-
-    category_test_percept = sorted(set(cat_te_p))
-    category_test_imagery = sorted(set(cat_te_i))
-
-    predict_percept_ave = [np.mean(predict_percept[cat_te_p == i]) for i in category_test_percept]
-    predict_imagery_ave = [np.mean(predict_imagery[cat_te_i == i]) for i in category_test_imagery]
-
-    #import pdb; pdb.set_trace()
-
-    ## Return results
-    return {'subject' : analysis['subject'],
-            'roi' : analysis['roi'],
-            'feature' : analysis['feature'],
-            'unit' : unit,
-            'predict_percept' : predict_percept,
-            'predict_imagery' : predict_imagery,
-            'predict_percept_catave' : predict_percept_ave,
-            'predict_imagery_catave' : predict_imagery_ave,
-            'category_test_percept' : category_test_percept,
-            'category_test_imagery' : category_test_imagery}
-
-
-#----------------------------------------------------------------------#
-# Main                                                                 #
-#----------------------------------------------------------------------#
-
-if __name__ == '__main__':
-    print 'Running ' + analysis_name
-
-    ## Load data (brain data & image features) -------------------------
-    print 'Loading brain data'
-    brain_data = {sbj : bdpy.BData(os.path.join(data_dir, sbj + '.mat'))
-                  for sbj in subject_list}
-
-    print 'Loading image features'
-    features = Features(os.path.join(data_dir, feature_file), feature_type)
-
-    ## Setup directories -----------------------------------------------
-
-    ## Result dir
-    if not os.path.isdir(result_dir):
-        os.makedirs(result_dir)
-
-    ## Tmp dir
-    if not os.path.isdir('./tmp'):
-        os.makedirs('./tmp')
-
-    ## Run analysis for each subject, ROI, and feature -----------------
-    for sbj, roi, feat in product(subject_list, roi_list, features.layers):
-        analysis_id = '%s-%s-%s-%s' % (__file__, sbj, roi, feat)
-        result_unit_file = os.path.join(result_dir, sbj, roi, feat + '.pkl')
-        lockfile = os.path.join('./tmp', analysis_id + '.lock')
-
-        print 'Analysis %s-%s-%s' % (sbj, roi, feat)
-
-        ## Check whether run the analysis or not
-        if os.path.isfile(result_unit_file):
-            print 'Already done. Skipped.'
-            continue
-
-        if os.path.isfile(lockfile):
-            print 'Already running. Skipped.'
-            continue
-
-        with open(lockfile, 'w'):
-            pass
-
+        print('Unit %03d' % (i + 1))
         start_time = time()
 
-        ## Generate analysis list
-        nvox_dict = dict(zip(roi_list, nvox_list))
-        analysis_list = [{'subject' : sbj,
-                          'roi' : roi,
-                          'num_voxel' : nvox_dict[roi],
-                          'feature' : feat,
-                          'unit' : i + 1,
-                          'ardreg_num_itr' : num_itr}
-                         for i in xrange(features.num_units[feat])]
+        # Get unit features
+        y_train_unit = y_train[:, i]
+        y_test_unit =  y_test[:, i]
 
-        ## Preparing data ----------------------------------------------
-
-        ## Brain data
-        data = brain_data[sbj].get_dataset('ROI_' + roi)
-        data_type = brain_data[sbj].get_dataset('DataType').flatten()
-        data_label = brain_data[sbj].get_dataset('Label').flatten()
-
-        ## Image features
-        feature = features.get('value', feat)
-        feature_type = features.get('type')
-        feature_label = features.get('image_label')
-        feature_catlabel = features.get('category_label')
-
-        ## Feature prediction for each unit ----------------------------
-        print 'Running feature prediction'
-
-        ## Training models and get predictions
-        results_unit = map(predict_feature_unit, analysis_list)
-
-        ## Save unit results
-        results_df = convert_dataframe(results_unit)
+        # Normalize image features for training (y_train_unit)
+        norm_mean_y = np.mean(y_train_unit, axis=0)
+        std_y = np.std(y_train_unit, axis=0, ddof=1)
+        norm_scale_y = 1 if std_y == 0 else std_y
         
-        res_dir, res_file = os.path.split(result_unit_file)
-        if not os.path.isdir(res_dir):
-            os.makedirs(res_dir)
+        y_train_unit = (y_train_unit - norm_mean_y) / norm_scale_y
 
-        with open(result_unit_file, 'wb') as f:
-            pickle.dump(results_df, f)
+        # Voxel selection
+        corr = corrcoef(y_train_unit, x_train, var='col')
 
-        print 'Time: %.3f sec' % (time() - start_time)
+        x_train_unit, voxel_index = select_top(x_train, np.abs(corr), n_voxel, axis=1, verbose=False)
+        x_test_unit = x_test[:, voxel_index]
 
-        os.remove(lockfile)
+        # Add bias terms
+        x_train_unit = add_bias(x_train_unit, axis=1)
+        x_test_unit = add_bias(x_test_unit, axis=1)
+
+        # Setup regression
+        # For quick demo, use linaer regression
+        model = LinearRegression()
+        #model = SparseLinearRegression(n_iter=n_iter, prune_mode=1)
+
+        # Training and test
+        try:
+            model.fit(x_train_unit, y_train_unit)  # Training
+            y_pred = model.predict(x_test_unit)    # Test
+        except:
+            # When SLiR failed, returns zero-filled array as predicted features
+            y_pred = np.zeros(y_test_unit.shape)
+
+        # Denormalize predicted features
+        y_pred = y_pred * norm_scale_y + norm_mean_y
+
+        y_true_list.append(y_test_unit)
+        y_pred_list.append(y_pred)
+
+        print('Time: %.3f sec' % (time() - start_time))
+
+    # Create numpy arrays for return values
+    y_predicted = np.vstack(y_pred_list).T
+    y_true = np.vstack(y_true_list).T
+
+    return y_predicted, y_true
+
+
+def get_averaged_feature(pred_y, true_y, labels):
+    '''Return category-averaged features'''
+
+    labels_set = np.unique(labels)
+
+    pred_y_av = np.array([np.mean(pred_y[labels == c, :], axis=0) for c in labels_set])
+    true_y_av = np.array([np.mean(true_y[labels == c, :], axis=0) for c in labels_set])
+
+    return pred_y_av, true_y_av, labels_set
+
+
+# Main #################################################################
+
+def main():
+    # Settings ---------------------------------------------------------
+
+    # Data settings
+    subjects = config.subjects
+    rois = config.rois
+    num_voxel = config.num_voxel
+
+    image_feature = config.image_feature_file
+    features = config.features
+
+    n_iter = 200
+
+    results_dir = config.results_dir
+
+    # Misc settings
+    analysis_basename = os.path.basename(__file__)
+
+    # Load data --------------------------------------------------------
+    print('----------------------------------------')
+    print('Loading data')
+
+    data_all = {}
+    for sbj in subjects:
+        if len(subjects[sbj]) == 1:
+            data_all[sbj] = bdpy.BData(subjects[sbj][0])
+        else:
+            # Concatenate data
+            suc_cols = ['Run', 'Block']
+            data_all[sbj] = concat_dataset([bdpy.BData(f) for f in subjects[sbj]],
+                                           successive=suc_cols)
+
+    data_feature = bdpy.BData(image_feature)
+
+    # Add any additional processing to data here
+
+    # Initialize directories -------------------------------------------
+    makedir_ifnot(results_dir)
+    makedir_ifnot('tmp')
+
+    # Analysis loop ----------------------------------------------------
+    print('----------------------------------------')
+    print('Analysis loop')
+
+    for sbj, roi, feat in product(subjects, rois, features):
+        print('--------------------')
+        print('Subject:    %s' % sbj)
+        print('ROI:        %s' % roi)
+        print('Num voxels: %d' % num_voxel[roi])
+        print('Feature:    %s' % feat)
+
+        # Distributed computation
+        analysis_id = analysis_basename + '-' + sbj + '-' + roi + '-' + feat
+        results_file = os.path.join(results_dir, analysis_id + '.pkl')
+
+        if os.path.exists(results_file):
+            print('%s is already done. Skipped.' % analysis_id)
+            continue
+
+        dist = DistComp(lockdir='tmp', comp_id=analysis_id)
+        if dist.islocked():
+            print('%s is already running. Skipped.' % analysis_id)
+            continue
+
+        dist.lock()
+
+        # Prepare data
+        print('Preparing data')
+        dat = data_all[sbj]
+
+        x = dat.select(rois[roi])          # Brain data
+        datatype = dat.select('DataType')  # Data type
+        labels = dat.select('Label')       # Image labels in brain data
+
+        y = data_feature.select(feat)             # Image features
+        y_label = data_feature.select('ImageID')  # Image labels
+
+        # For quick demo, reduce the number of units from 1000 to 100
+        y = y[:, :100]
+
+        y_sorted = get_refdata(y, y_label, labels)  # Image features corresponding to brain data
+
+        # Get training and test dataset
+        i_train = (datatype == 1).flatten()    # Index for training
+        i_test_pt = (datatype == 2).flatten()  # Index for perception test
+        i_test_im = (datatype == 3).flatten()  # Index for imagery test
+        i_test = i_test_pt + i_test_im
+
+        x_train = x[i_train, :]
+        x_test = x[i_test, :]
+
+        y_train = y_sorted[i_train, :]
+        y_test = y_sorted[i_test, :]
+
+        # Feature prediction
+        pred_y, true_y = feature_prediction(x_train, y_train,
+                                            x_test, y_test,
+                                            n_voxel=num_voxel[roi],
+                                            n_iter=n_iter)
+
+        # Separate results for perception and imagery tests
+        i_pt = i_test_pt[i_test]  # Index for perception test within test
+        i_im = i_test_im[i_test]  # Index for imagery test within test
+
+        pred_y_pt = pred_y[i_pt, :]
+        pred_y_im = pred_y[i_im, :]
+
+        true_y_pt = true_y[i_pt, :]
+        true_y_im = true_y[i_im, :]
+
+        # Get averaged predicted feature
+        test_label_pt = labels[i_test_pt, :].flatten()
+        test_label_im = labels[i_test_im, :].flatten()
+
+        pred_y_pt_av, true_y_pt_av, test_label_set_pt \
+            = get_averaged_feature(pred_y_pt, true_y_pt, test_label_pt)
+        pred_y_im_av, true_y_im_av, test_label_set_im \
+            = get_averaged_feature(pred_y_im, true_y_im, test_label_im)
+
+        # Get category averaged features
+        catlabels_pt = np.vstack([int(n) for n in test_label_pt])  # Category labels (perception test)
+        catlabels_im = np.vstack([int(n) for n in test_label_im])  # Category labels (imagery test)
+        catlabels_set_pt = np.unique(catlabels_pt)                 # Category label set (perception test)
+        catlabels_set_im = np.unique(catlabels_im)                 # Category label set (imagery test)
+
+        y_catlabels = data_feature.select('CatID')   # Category labels in image features
+        ind_catave = (data_feature.select('FeatureType') == 3).flatten()
+
+        y_catave_pt = get_refdata(y[ind_catave, :], y_catlabels[ind_catave, :], catlabels_set_pt)
+        y_catave_im = get_refdata(y[ind_catave, :], y_catlabels[ind_catave, :], catlabels_set_im)
+
+        # Prepare result dataframe
+        results = pd.DataFrame({'subject' : [sbj, sbj],
+                                'roi' : [roi, roi],
+                                'feature' : [feat, feat],
+                                'test_type' : ['perception', 'imagery'],
+                                'true_feature': [true_y_pt, true_y_im],
+                                'predicted_feature': [pred_y_pt, pred_y_im],
+                                'test_label' : [test_label_pt, test_label_im],
+                                'test_label_set' : [test_label_set_pt, test_label_set_im],
+                                'true_feature_averaged' : [true_y_pt_av, true_y_im_av],
+                                'predicted_feature_averaged' : [pred_y_pt_av, pred_y_im_av],
+                                'category_label_set' : [catlabels_set_pt, catlabels_set_im],
+                                'category_feature_averaged' : [y_catave_pt, y_catave_im]})
+
+        # Save results
+        makedir_ifnot(os.path.dirname(results_file))
+        with open(results_file, 'wb') as f:
+            pickle.dump(results, f)
+
+        print('Saved %s' % results_file)
+
+        dist.unlock()
+
+
+if __name__ == '__main__':
+    # To avoid any use of global variables,
+    # do nothing except calling main() here
+    main()

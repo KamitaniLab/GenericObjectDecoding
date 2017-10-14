@@ -5,106 +5,91 @@ This file is a part of GenericDecoding_demo.
 '''
 
 
-import sys
+from __future__ import print_function
+
 import os
 import pickle
-from itertools import product
 
-import numpy
+import numpy as np
+import pandas as pd
 
 import bdpy
 from bdpy.stats import corrmat
-from bdpy.dataform import convert_dataframe
 
-import gd_parameters as gd
-from gd_features import Features
+import god_config as config
 
 
-#----------------------------------------------------------------------#
-# Global settings                                                      #
-#----------------------------------------------------------------------#
+# Main #################################################################
 
-analysis_name = __file__
+def main():
+    results_dir = config.results_dir
+    output_file = config.results_file
 
-# Get global parametes from gd_parameters
-data_dir = gd.data_dir
-subject_list = gd.subject_list
-roi_list = gd.roi_list
-feature_file = gd.feature_file
-feature_type = gd.feature_type
-result_dir = gd.result_dir
-featpred_file = gd.results_featurepred
-result_file = gd.results_categoryident
+    image_feature_file = config.image_feature_file
 
+    # Load results -----------------------------------------------------
+    print('Loading %s' % output_file)
+    with open(output_file, 'rb') as f:
+        results = pickle.load(f)
 
-#----------------------------------------------------------------------#
-# Functions                                                            #
-#----------------------------------------------------------------------#
+    data_feature = bdpy.BData(image_feature_file)
 
-def category_identification(inputs):
-    '''Runs category identification'''
+    # Category identification ------------------------------------------
+    print('Running pair-wise category identification')
 
-    sbj, roi, feat = inputs
+    feature_list = results['feature']
+    pred_percept = results['predicted_feature_averaged_percept']
+    pred_imagery = results['predicted_feature_averaged_imagery']
+    cat_label_percept = results['category_label_set_percept']
+    cat_label_imagery = results['category_label_set_imagery']
+    cat_feature_percept = results['category_feature_averaged_percept']
+    cat_feature_imagery = results['category_feature_averaged_imagery']
 
-    res = results_featpred.query("subject == @sbj and roi == @roi and feature ==@feat")
+    ind_cat_other = (data_feature.select('FeatureType') == 4).flatten()
 
-    ## Preparing data
-    feature = features.get('value', feat)
-    feature_type = features.get('type')
-    feature_label = features.get('image_label')
-    feature_catlabel = features.get('category_label')
+    pwident_cr_pt = []  # Prop correct in pair-wise identification (perception)
+    pwident_cr_im = []  # Prop correct in pair-wise identification (imagery)
 
-    ## Category identification -----------------------------------------
+    for f, fpt, fim, pred_pt, pred_im in zip(feature_list, cat_feature_percept, cat_feature_imagery,
+                                             pred_percept, pred_imagery):
+        feat_other = data_feature.select(f)[ind_cat_other, :]
 
-    # FIXME: is there better way to extract numpy array?
-    pred_percept = res['predict_percept'].as_matrix()[0]
-    pred_imagery = res['predict_imagery'].as_matrix()[0]
+        n_unit = fpt.shape[1]
+        feat_other = feat_other[:, :n_unit]
 
-    cat_percept = res['category_test_percept'].as_matrix()[0]
-    cat_imagery = res['category_test_percept'].as_matrix()[0]
+        feat_candidate_pt = np.vstack([fpt, feat_other])
+        feat_candidate_im = np.vstack([fim, feat_other])
 
-    ## Get category features
-    ind_cattest = feature_type == 3
-    feat_cattest = feature[ind_cattest, :]
-    featlb_cattest = feature_catlabel[ind_cattest]
+        simmat_pt = corrmat(pred_pt, feat_candidate_pt)
+        simmat_im = corrmat(pred_im, feat_candidate_im)
 
-    test_feat_cat_percept = bdpy.get_refdata(feat_cattest, featlb_cattest, cat_percept)
-    test_feat_cat_imagery = bdpy.get_refdata(feat_cattest, featlb_cattest, cat_imagery)
+        cr_pt = get_pwident_correctrate(simmat_pt)
+        cr_im = get_pwident_correctrate(simmat_im)
 
-    feat_cat_test = test_feat_cat_percept
-    feat_cat_other = feature[feature_type == 4, :] # Unseen categories
+        pwident_cr_pt.append(np.mean(cr_pt))
+        pwident_cr_im.append(np.mean(cr_im))
 
-    labels = range(feat_cat_test.shape[0])
-    candidate = numpy.vstack([feat_cat_test, feat_cat_other])
+    results['catident_correct_rate_percept'] = pwident_cr_pt
+    results['catident_correct_rate_imagery'] = pwident_cr_im
 
-    ## Seen categories
-    simmat = corrmat(pred_percept, candidate)
-    correct_rate_percept = get_pwident_correctrate(simmat, labels)
+    # Save the merged dataframe ----------------------------------------
+    with open(output_file, 'wb') as f:
+        pickle.dump(results, f)
+    print('Saved %s' % output_file)
 
-    ## Imagined categories
-    simmat = corrmat(pred_imagery, candidate)
-    correct_rate_imagery = get_pwident_correctrate(simmat, labels)
+    # Show results -----------------------------------------------------
+    tb_pt = pd.pivot_table(results, index=['roi'], columns=['feature'],
+                           values=['catident_correct_rate_percept'], aggfunc=np.mean)
+    tb_im = pd.pivot_table(results, index=['roi'], columns=['feature'],
+                           values=['catident_correct_rate_imagery'], aggfunc=np.mean)
 
-    ## Calculate average correct rate
-    correct_rate_percept_ave = numpy.mean(correct_rate_percept)
-    correct_rate_imagery_ave = numpy.mean(correct_rate_imagery)
-
-    ## Print results
-    res_str = "%s-%s-%s\n" % (sbj, roi, feat)
-    res_str += "Correct rate (seen)\t: %.2f %%\n" % (correct_rate_percept_ave * 100)
-    res_str += "Correct rate (imagined)\t: %.2f %%" % (correct_rate_imagery_ave * 100)
-    print res_str
-
-    return {'subject' : sbj,
-            'roi' : roi,
-            'feature' : feat,
-            'correct_rate_percept' : correct_rate_percept,
-            'correct_rate_imagery' : correct_rate_imagery,
-            'correct_rate_percept_ave' : correct_rate_percept_ave,
-            'correct_rate_imagery_ave' : correct_rate_imagery_ave}
+    print(tb_pt)
+    print(tb_im)
 
 
-def get_pwident_correctrate(simmat, labels):
+# Functions ############################################################
+
+def get_pwident_correctrate(simmat):
     '''
     Returns correct rate in pairwise identification
 
@@ -112,8 +97,6 @@ def get_pwident_correctrate(simmat, labels):
     ----------
     simmat : numpy array [num_prediction * num_category]
         Similarity matrix
-    labels : list or vector [num_prediction]
-        List or vector of indexes of true labels
 
     Returns
     -------
@@ -121,49 +104,21 @@ def get_pwident_correctrate(simmat, labels):
     '''
 
     num_pred = simmat.shape[0]
+    labels = range(num_pred)
 
     correct_rate = []
     for i in xrange(num_pred):
         pred_feat = simmat[i, :]
         correct_feat = pred_feat[labels[i]]
         pred_num = len(pred_feat) - 1
-        correct_rate.append((pred_num - numpy.sum(pred_feat > correct_feat)) / float(pred_num))
+        correct_rate.append((pred_num - np.sum(pred_feat > correct_feat)) / float(pred_num))
 
     return correct_rate
 
 
-#----------------------------------------------------------------------#
-# Main                                                                 #
-#----------------------------------------------------------------------#
+# Run as a scirpt ######################################################
 
-if __name__ == "__main__":
-    print "Running " + analysis_name
-
-    ## Load data (image features)
-    print "Loading image features"
-    features = Features(os.path.join(data_dir, feature_file), feature_type)
-
-    ## Load feature predition results
-    print "Loading feature prediction results"
-    res_file = os.path.join(result_dir, featpred_file)
-    with open(res_file, 'rb') as f:
-        results_featpred = pickle.load(f)
-
-    ## Create result dir
-    if not os.path.isdir(result_dir):
-        os.makedirs(result_dir)
-
-    ## Generate analysis list
-    feature_list = features.layers
-    input_list = [(s, r, f) for s, r, f in product(subject_list, roi_list, feature_list)]
-    
-    ## Category identification
-    print "Running category identification"
-    results = map(category_identification, input_list)
-
-    ## Save results
-    print "Saving results"
-    df_results = convert_dataframe(results)
-
-    with open(os.path.join(result_dir, result_file), 'wb') as f:
-        pickle.dump(df_results, f)
+if __name__ == '__main__':
+    # To avoid any use of global variables,
+    # do nothing except calling main() here
+    main()
