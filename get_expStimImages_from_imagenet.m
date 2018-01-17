@@ -72,7 +72,7 @@ end
 
 %% Get image lists -------------------------------------------------------------
 for i = 1:length(imageListFiles)
-    fid = fopen(imageListFiles{1}, 'r');
+    fid = fopen(imageListFiles{i}, 'r');
     imageList = textscan(fid, '%n%s', 'delimiter', ',');
     fclose(fid);
 
