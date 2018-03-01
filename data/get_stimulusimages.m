@@ -1,7 +1,8 @@
-function images = get_expStimImages_from_imagenet(username, accessKey)
-% get_expStimImages_from_imagenet - Get images from ImageNet
+function images = get_stimulusimages(username, accessKey)
+% get_stimulusimages    Get stimulus images from ImageNet
 % 
 % Note:
+%
 % This script is for downloading all 1200 training and 50 test images of
 % experimental stimulus used in Horikawa and Kamitani 2017
 % "Generic decoding of seen and imagined objects using hierarchical visual features".
@@ -32,9 +33,8 @@ function images = get_expStimImages_from_imagenet(username, accessKey)
 %% Settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % List of CSV files which contains image IDs and image file names
-% CSV files are available from http://brainliner.jp/data/brainliner/Generic_Object_Decoding
-imageListFiles = {'./data/images/imageID_training.csv', ...
-                  './data/images/imageID_test.csv'};
+imageListFiles = {'./imageID_training.csv', ...
+                  './imageID_test.csv'};
 
 % Type of images ('training' or 'test')
 % This should correspond to 'imageListFiles'
@@ -42,7 +42,7 @@ imageType = {'training', ...
              'test'};
 
 % The directory in which images will be saved
-imageDir = './data/images';
+imageDir = './images';
 
 % Image trimming size (500 px)
 imageSize = 500;
@@ -206,7 +206,7 @@ end
 %% Subfunctions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [trimmed] = trimImgCenter(img)
-% trimimgCenter - Trims an image on the center
+% trimimgCenter    Trims an image on the center
 %
 % Input:
 %
