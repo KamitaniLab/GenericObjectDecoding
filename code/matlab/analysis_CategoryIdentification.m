@@ -52,7 +52,7 @@ if ~exist(resultsDir, 'dir'), mkdir(resultsDir); end;
 %% Load image features
 fprintf('Loading image feature data...\n');
 
-feat = load(fullfile(dataDir, imageFeatureFile));
+[feat.dataSet, feat.metaData] = load_data(fullfile(dataDir, imageFeatureFile));
 
 %%----------------------------------------------------------------------
 %% Create analysis parameter matrix (analysisParam)

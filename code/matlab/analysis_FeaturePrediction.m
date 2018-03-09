@@ -66,17 +66,17 @@ setupdir(lockDir);
 fprintf('Loading brain data...\n');
 
 for n = 1:length(subjectList)
-    d = load(fullfile(dataDir, dataFileList{n}));
+    [dataset, metadata] = load_data(fullfile(dataDir, dataFileList{n}));
 
     dat(n).subject = subjectList{n};
-    dat(n).dataSet = d.dataSet;
-    dat(n).metaData = d.metaData;
+    dat(n).dataSet = dataset;
+    dat(n).metaData = metadata;
 end
 
 %% Load image features
 fprintf('Loading image feature data...\n');
 
-feat = load(fullfile(dataDir, imageFeatureFile));
+[feat.dataSet, feat.metaData] = load_data(fullfile(dataDir, imageFeatureFile));
 
 % Get num of units for each feature
 for n = 1:length(featureList)

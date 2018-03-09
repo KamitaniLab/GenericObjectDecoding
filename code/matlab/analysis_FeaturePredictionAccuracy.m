@@ -52,7 +52,7 @@ if ~exist(resultsDir, 'dir'), mkdir(resultsDir); end;
 %% Load image features
 fprintf('Loading image feature data...\n');
 
-feat = load(fullfile(dataDir, imageFeatureFile));
+[feat.dataSet, feat.metaData] = load_data(fullfile(dataDir, imageFeatureFile));
 
 % Get num of units for each feature
 % (1 = training; 2 = test; 3 = category test; 4 = category others)
