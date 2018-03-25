@@ -1,5 +1,7 @@
 '''
-gd_makedata_features
+makedata_features
+
+Extarce CNN features from images and save them in a BData file (hdf5).
 
 This file is a part of GenericDecoding_demo.
 '''
