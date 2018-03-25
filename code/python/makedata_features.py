@@ -116,7 +116,7 @@ def main():
         features.add(np.vstack(features_dict[ft]), ft)
 
     # Save merged features ---------------------------------------------------
-    features.save('ImageFeatures_caffe.h5')
+    features.save(outputfile)
 
 
 def get_category_id(image_filename):
