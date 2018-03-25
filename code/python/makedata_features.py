@@ -16,37 +16,120 @@ import caffe
 import numpy as np
 import pandas as pd
 
+import bdpy
+
 from gd_cnn import CnnModel
 
 
-## Global settings #############################################################
+# Main #######################################################################
 
-# Feture selection settings
-num_features = 1000
+def main():
+    # Settings ---------------------------------------------------------------
 
-# CNN model settings
-model_def = './data/cnn/bvlc_reference_caffenet/bvlc_reference_caffenet.prototxt'
-model_param = './data/cnn/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'
-cnn_layers = ('conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8')
+    # Feture selection settings
+    num_features = 1000
 
-mean_image_file = './data/images/ilsvrc_2012_mean.npy' # ImageNet Large Scale Visual Recognition Challenge 2012
+    # CNN model settings
+    model_def = './data/cnn/bvlc_reference_caffenet/bvlc_reference_caffenet.prototxt'
+    model_param = './data/cnn/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'
+    cnn_layers = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8']
 
-# Stimulus image settings
-exp_stimuli_dir = ('./data/images/image_training', './data/images/image_test')
-catave_image_dir = ('./data/images/category_test', './data/images/category_candidate')
+    mean_image_file = './data/images/ilsvrc_2012_mean.npy' # ImageNet Large Scale Visual Recognition Challenge 2012
 
-# Results file
-data_dir = './data'
-featuredir = os.path.join(data_dir, 'ImageFeatures_caffe_test/')
-outputfile = os.path.join(data_dir, 'ImageFeatures_caffe_test.pkl')
+    # Results file
+    data_dir = './data'
+    featuredir = os.path.join(data_dir, 'ImageFeatures_caffe/')
+    outputfile = os.path.join(data_dir, 'ImageFeatures_caffe.h5')
 
-# Misc settings
-rand_seed = 2501
+    # Misc settings
+    rand_seed = 2501
+
+    # Preparation ------------------------------------------------------------
+
+    # Caffe GPU setting
+    caffe.set_mode_gpu()
+
+    # Result directory
+    if not os.path.exists(featuredir):
+        os.makedirs(featuredir)
+
+    # Load CNN model ---------------------------------------------------------
+    model = CnnModel(model_def, model_param, mean_image_file, batch_size=128, rand_seed=rand_seed)
+
+    # Get image features for traning images ----------------------------------
+    features_train = get_image_features(model, './data/images/image_training',
+                                        layers=cnn_layers, n_features=num_features,
+                                        save=True, savefile=os.path.join(featuredir, 'features_training.pkl'))
+
+    # Get image features for test images -------------------------------------
+    features_test = get_image_features(model, './data/images/image_test',
+                                       layers=cnn_layers, n_features=num_features,
+                                       save=True, savefile=os.path.join(featuredir, 'features_test.pkl'))
+
+    # Category averaged features ---------------------------------------------
+    features_cat_test = get_category_averaged_features(model, './data/images/category_test',
+                                                       layers=cnn_layers, n_features=num_features,
+                                                       save=True, savefile=os.path.join(featuredir, 'feature_category_ave_test.pkl'))
+
+    # features_cat_cand = get_category_averaged_features(model, './data/images/category_candidate',
+    #                                                    layers=cnn_layers, n_features=num_features,
+    #                                                    save=True, savefile=os.path.join(featuredir, 'feature_category_ave_candidate.pkl'))
+
+    # Create features data in BData ------------------------------------------
+    features = bdpy.BData()
+
+    #features_list = [features_train, features_test, features_cat_test, features_cat_cand]
+    features_list = [features_train, features_test, features_cat_test]
+
+    featuretype_arrays = []
+    categoryid_arrays = []
+    imageid_arrays = []
+    features_dict = {lay : [] for lay in cnn_layers}
+
+    for i, feat in enumerate(features_list):
+        n_sample = len(feat.index)
+        feature_type = i + 1
+
+        image_id = feat.index
+
+        for img in image_id:
+            cat_id = get_category_id(img)
+            if i < 2:
+                img_id = get_image_id(img)
+            else:
+                img_id = np.nan
+
+            featuretype_arrays.append(feature_type)
+            categoryid_arrays.append(cat_id)
+            imageid_arrays.append(img_id)
+
+            for lay in cnn_layers:
+                features_dict[lay].append(feat[lay][img])
+
+    # Add data
+    features.add(np.vstack(featuretype_arrays), 'FeatureType')
+    features.add(np.vstack(categoryid_arrays), 'CatID')
+    features.add(np.vstack(imageid_arrays), 'ImageID')
+    for ft in features_dict:
+        features.add(np.vstack(features_dict[ft]), ft)
+
+    # Save merged features ---------------------------------------------------
+    features.save('ImageFeatures_caffe.h5')
 
 
-## Functions ###########################################################
+def get_category_id(image_filename):
+    return int(image_filename.split('_')[0][1:])
 
-def get_image_features(net, imagedir, save=False, savefile=None):
+
+def get_image_id(image_filename):
+    cat_id = get_category_id(image_filename)
+    img_id = int(image_filename.split('_')[1][:-5])
+    return float('%d.%06d' % (cat_id, img_id))
+
+
+# Functions ##################################################################
+
+def get_image_features(net, imagedir, layers=[], n_features=1000, save=False, savefile=None):
     '''Calculate image features in `imagedir` and save them in `saveile`'''
 
     if os.path.exists(savefile):
@@ -67,7 +150,7 @@ def get_image_features(net, imagedir, save=False, savefile=None):
     ## Get image features
     print 'Getting features'
     start_time = time()
-    features = net.get_feature(imagefiles, cnn_layers, feature_num=num_features)
+    features = net.get_feature(imagefiles, layers, feature_num=n_features)
     end_time = time()
 
     print 'Time: %.3f sec' % (end_time - start_time)
@@ -75,25 +158,25 @@ def get_image_features(net, imagedir, save=False, savefile=None):
     # Convert to pandas dataframe
     feat = pd.DataFrame([[lay for lay in img] for img in features],
                         index=[os.path.split(f)[1] for f in imagefiles],
-                        columns=cnn_layers)
+                        columns=layers)
 
     # Save data in a pickle file
     if save:
         with open(savefile, 'wb') as f:
             pickle.dump(feat, f)
         print 'Saved %s' % savefile
-            
+
     return feat
 
 
-def get_category_averaged_features(net, imagedir, save=False, savefile=None):
+def get_category_averaged_features(net, imagedir, layers=[], n_features=1000, save=False, savefile=None):
     '''Calculate category averaged features'''
 
     feat_dir, feat_file = os.path.split(savefile)
-    
+
     catlist = os.listdir(imagedir)
 
-    dat = pd.DataFrame(index=catlist, columns=cnn_layers)
+    dat = pd.DataFrame(index=catlist, columns=layers)
 
     for cat in catlist:
         catdir = os.path.join(imagedir, cat)
@@ -103,8 +186,10 @@ def get_category_averaged_features(net, imagedir, save=False, savefile=None):
             continue
 
         print 'Category: %s' % catdir
-        
-        feat = get_image_features(net, catdir, save=True, savefile=catfile)
+
+        feat = get_image_features(net, catdir,
+                                  layers=layers, n_features=n_features,
+                                  save=True, savefile=catfile)
 
         # Calc mean
         print 'Calculating averaged features'
@@ -121,64 +206,7 @@ def get_category_averaged_features(net, imagedir, save=False, savefile=None):
     return dat
 
 
-def add_features_df(df, features, featuretype=0):
-    '''Add features to a dataframe'''
-
-    imageids = []
-    catids = []
-    for i in features.index:
-
-        # Get image and category IDs
-        if featuretype == 1 or featuretype == 2:
-            (cat_str, img_str) = i.split('_')
-            cat_id = np.int(cat_str[1:])
-            img_num = int(img_str[:-5])
-            img_id = float('%d.%06d' % (cat_id, img_num))
-        else:
-            cat_id = np.int(i)
-            img_id = np.nan
-
-        imageids.append(img_id)
-        catids.append(cat_id)
-
-    features['ImageID'] = imageids
-    features['CatID'] = catids
-    features['FeatureType'] = [np.int(featuretype) for _ in xrange(features.shape[0])]
-
-    return df.append(features)
-
-    
-## Main ################################################################
+# Entry point ################################################################
 
 if __name__ == '__main__':
-
-    caffe.set_mode_gpu()
-
-    if not os.path.exists(featuredir):
-        os.makedirs(featuredir)
-    
-    ## Load CNN model --------------------------------------------------
-    model = CnnModel(model_def, model_param, mean_image_file, batch_size=128, rand_seed=rand_seed)
-
-    ## Init Pandas dataframe
-    df = pd.DataFrame(columns=['ImageID', 'CatID', 'FeatureType', 'conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8'])
-    
-    ## Image features --------------------------------------------------
-    features = get_image_features(model, './data/images/image_training', save=True, savefile=os.path.join(featuredir, 'feature_training.pkl'))
-    df = add_features_df(df, features, featuretype=1)
-
-    features = get_image_features(model, './data/images/image_test', save=True, savefile=os.path.join(featuredir, 'feature_test.pkl'))
-    df = add_features_df(df, features, featuretype=2)
-    
-    ## Category averaged features --------------------------------------
-    features = get_category_averaged_features(model, './data/images/category_test', save=True, savefile=os.path.join(featuredir, 'feature_category_ave_test.pkl'))
-    df = add_features_df(df, features, featuretype=3)
-
-    features = get_category_averaged_features(model, './data/images/category_candidate', save=True, savefile=os.path.join(featuredir, 'feature_category_ave_candidate.pkl'))
-    df = add_features_df(df, features, featuretype=4)
-
-    ## Save merged features --------------------------------------------
-    df['FeatureType'] = df['FeatureType'].astype('int')
-    df['CatID'] = df['CatID'].astype('int')
-    with open(outputfile, 'wb') as f:
-        pickle.dump(df, f)
+    main()
