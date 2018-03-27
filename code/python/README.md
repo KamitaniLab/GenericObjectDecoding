@@ -33,15 +33,15 @@ The data directory should have the following files:
             +-- Subject5.mat (fMRI data, subject 5)
             |
             +-- ImageFeatures.h5 (image features extracted with Matconvnet)
-            |
-            +-- ImageFeatures_caffe.pkl (image features extracted with Caffe)
-            |
-            +-- images/ (training and test images)
-            |
-            +-- cnn/ (Caffe CNN related data)
 
-Either `ImageFeatures.h5` or `ImageFeatures_caffe.pkl` is necessary for the analysis.
-`images` and `cnn` are required if you calculate image feature by yourself.
+Download links:
+
+- [Subject1.mat](http://brainliner.jp/download/32/downloadSupplementaryFile)
+- [Subject2.mat](http://brainliner.jp/download/36/downloadSupplementaryFile)
+- [Subject3.mat](http://brainliner.jp/download/34/downloadSupplementaryFile)
+- [Subject4.mat](http://brainliner.jp/download/35/downloadSupplementaryFile)
+- [Subject5.mat](http://brainliner.jp/download/33/downloadSupplementaryFile)
+- [ImageFeatures.h5](http://brainliner.jp/download/1332/downloadDataFile)
 
 ## Script files
 
