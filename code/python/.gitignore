@@ -1,9 +1,12 @@
+*~
 .python-version
 *.pyc
 *.lprof
 *.tar.gz
 obsoleted
+data
 results
 results_*
 tmp
 lib
+bdpy
