@@ -23,12 +23,15 @@ The data directory should have the following files:
             +-- Subject5.mat (fMRI data, subject 5)
             |
             +-- ImageFeatures.mat (image features extracted with Matconvnet)
-            |
-            +-- images/ (training and test images)
-            |
-            +-- cnn/ (Caffe CNN related data)
 
-`images` and `cnn` are required if you calculate image feature by yourself.
+Download links:
+
+- [Subject1.mat](http://brainliner.jp/download/32/downloadSupplementaryFile)
+- [Subject2.mat](http://brainliner.jp/download/36/downloadSupplementaryFile)
+- [Subject3.mat](http://brainliner.jp/download/34/downloadSupplementaryFile)
+- [Subject4.mat](http://brainliner.jp/download/35/downloadSupplementaryFile)
+- [Subject5.mat](http://brainliner.jp/download/33/downloadSupplementaryFile)
+- [ImageFeatures.mat](http://brainliner.jp/download/50/downloadSupplementaryFile)
 
 ## Analysis
 
@@ -48,4 +51,4 @@ To visualize the results, run the following script.
 >> createfigure
 ```
 
-`god_makefigure` will create two figures: one shows the results of image feature and category-averaged feature prediction, and the other displays the results of category identification. The figures will be saved in `results` directory in PDF format (`FeaturePredictionAccuracy.pdf` and `IdentificationAccuracy.pdf`).
+`createfigure.m` will create two figures: one shows the results of image feature and category-averaged feature prediction, and the other displays the results of category identification. The figures will be saved in `results` directory in PDF format (`FeaturePredictionAccuracy.pdf` and `IdentificationAccuracy.pdf`).
