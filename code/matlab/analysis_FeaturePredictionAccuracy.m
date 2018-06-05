@@ -136,7 +136,7 @@ for n = 1:size(analysisParam, 1)
 
     testFeat = get_refdata(testFeat, testCatIds, categoryPercept);
 
-    %% Image feature prediction accuracy
+    %% Image feature prediction accuracy (profile correlation)
     predAcc.image.perception = nanmean(diag(fastcorr(predPercept, testFeat)));
 
     %% Get test features (category averaged)
@@ -146,7 +146,7 @@ for n = 1:size(analysisParam, 1)
     catTestFeatPercept = get_refdata(catTestFeat, catTestCatIds, categoryPercept);
     catTestFeatImagery = get_refdata(catTestFeat, catTestCatIds, categoryImagery);
 
-    %% Category-average feature prediction accuracy
+    %% Category-average feature prediction accuracy (profile correlation)
     predAcc.category.perception = nanmean(diag(fastcorr(predPercept, catTestFeatPercept)));
     predAcc.category.imagery    = nanmean(diag(fastcorr(predImagery, catTestFeatImagery)));
 
