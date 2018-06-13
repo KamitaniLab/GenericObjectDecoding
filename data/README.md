@@ -1,7 +1,8 @@
 # Generic Object Decoding Dataset
 
-All data used in the generic object decoding (preprocessed fMRI data and image features in [BrainDecoderToolbox2](https://github.com/KamitaniLab/BrainDecoderToolbox2) format), are available at [Brainliner](http://brainliner.jp/data/brainliner/Generic_Object_Decoding)).
-The following files are required to run demo scripts.
+All data used in the generic object decoding (preprocessed fMRI data and image features in [BrainDecoderToolbox2](https://github.com/KamitaniLab/BrainDecoderToolbox2) format), are available at [Brainliner](http://brainliner.jp/data/brainliner/Generic_Object_Decoding).
+
+To run the demo scripts, please download the following files and place them in this directory.
 
 - [Subject1.mat](http://brainliner.jp/download/32/downloadSupplementaryFile)
 - [Subject2.mat](http://brainliner.jp/download/36/downloadSupplementaryFile)
