@@ -1,14 +1,14 @@
-# Generic Object Decoding dataset
+# Generic Object Decoding Dataset
 
-All data used in Generic Object Decoding, preprocessed fMRI data and image features, are available at <http://brainliner.jp/data/brainliner/Generic_Object_Decoding>.
-Specifically, the following files are required to run demo scripts.
+All data used in the generic object decoding (preprocessed fMRI data and image features in [BrainDecoderToolbox2](https://github.com/KamitaniLab/BrainDecoderToolbox2) format), are available at [Brainliner](http://brainliner.jp/data/brainliner/Generic_Object_Decoding)).
+The following files are required to run demo scripts.
 
 - [Subject1.mat](http://brainliner.jp/download/32/downloadSupplementaryFile)
 - [Subject2.mat](http://brainliner.jp/download/36/downloadSupplementaryFile)
 - [Subject3.mat](http://brainliner.jp/download/34/downloadSupplementaryFile)
 - [Subject4.mat](http://brainliner.jp/download/35/downloadSupplementaryFile)
 - [Subject5.mat](http://brainliner.jp/download/33/downloadSupplementaryFile)
-- [ImageFeatures.mat](http://brainliner.jp/download/50/downloadSupplementaryFile) (for Matlab)
-- [ImageFeatures.h5](http://brainliner.jp/download/1332/downloadDataFile) (for Python)
+- [ImageFeatures.mat](http://brainliner.jp/download/50/downloadSupplementaryFile) (for Matlab demo scripts)
+- [ImageFeatures.h5](http://brainliner.jp/download/1332/downloadDataFile) (for Python demo scripts)
 
-Unpreprocessed fMRI dataset is avaiable at OpenNeuro (https://openneuro.org/datasets/ds001246).
+Unpreprocessed fMRI as a [BIDS](http://bids.neuroimaging.io/) dataset is avaiable at [OpenNeuro](https://openneuro.org/datasets/ds001246).
