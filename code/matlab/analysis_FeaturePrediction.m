@@ -256,6 +256,8 @@ for n = 1:size(analysisParam, 1)
     categoryTestPercept = unique(floor(testPerceptLabels));
     categoryTestImagery = unique(floor(testimageryLabels));
 
+    predictPerceptAveraged = [];
+    predictImageryAveraged = [];
     for j = 1:length(categoryTestPercept)
         categ = categoryTestPercept(j);
         predictPerceptAveraged(j, :) = mean(predictPercept(floor(testPerceptLabels) == categ, :));
