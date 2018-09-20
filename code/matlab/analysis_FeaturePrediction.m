@@ -192,13 +192,13 @@ for n = 1:size(analysisParam, 1)
 
     %% Preprocessing ---------------------------------------------------
 
-    %% Normalize data
+    %% Normalize brain data
     [trainData, xMean, xNorm] = zscore(trainData);
 
     testPerceptData = bsxfun(@rdivide, bsxfun(@minus, testPerceptData, xMean), xNorm);
     testImageryData = bsxfun(@rdivide, bsxfun(@minus, testImageryData, xMean), xNorm);
 
-    %% Preprocessing (normalization of image features)
+    %% Normalize image features
     [trainFeat, yMean, yNorm] = zscore(trainFeat);
 
     %% Loop for each unit ----------------------------------------------
