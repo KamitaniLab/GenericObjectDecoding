@@ -78,11 +78,6 @@ fprintf('Loading image feature data...\n');
 
 [feat.dataSet, feat.metaData] = load_data(fullfile(dataDir, imageFeatureFile));
 
-% Get num of units for each feature
-for n = 1:length(featureList)
-    numUnits(n) = size(select_data(feat.dataSet, feat.metaData, sprintf('%s = 1', featureList{n})), 2);
-end
-
 %%----------------------------------------------------------------------
 %% Create analysis parameter matrix (analysisParam)
 %%----------------------------------------------------------------------
@@ -116,9 +111,6 @@ for n = 1:size(analysisParam, 1)
     iRoi = analysisParam(n, 2);
     iFeat = analysisParam(n, 3);
 
-    % Get the number of units
-    nUnit = numUnits(iFeat);
-    
     % Set analysis ID and a result file name
     analysisId = sprintf('%s-%s-%s-%s', ...
                          mfilename, ...
@@ -146,7 +138,7 @@ for n = 1:size(analysisParam, 1)
     lockcomput(analysisId, lockDir);
 
     %% Load data -------------------------------------------------------
-    
+
     %% Get brain data
     voxSelector = sprintf('ROI_%s = 1', roiList{iRoi});
     nVox = numVoxelList{iRoi};
@@ -164,7 +156,20 @@ for n = 1:size(analysisParam, 1)
     % - 3: Test data (imagery)
     %
 
-    %% Get image feature
+    % Get brain data for training and test
+    indTrain = dataType == 1;       % Index of training data
+    indTestPercept = dataType == 2; % Index of percept test data
+    indTestimagery = dataType == 3; % index of imagery test data
+
+    trainData = brainData(indTrain, :);
+    testPerceptData = brainData(indTestPercept, :);
+    testImageryData = brainData(indTestimagery, :);
+
+    trainLabels = labels(indTrain, :);
+    testPerceptLabels = labels(indTestPercept, :);
+    testimageryLabels = labels(indTestimagery, :);
+
+    %% Get image features
     layerFeat = select_data(feat.dataSet, feat.metaData, ...
                             sprintf('%s = 1', featureList{iFeat}));
     featType = get_dataset(feat.dataSet, feat.metaData, 'FeatureType');
@@ -179,62 +184,51 @@ for n = 1:size(analysisParam, 1)
     % - 4 = category others
     %
 
-    %% Get brain data for training and test
-    indTrain = dataType == 1;       % Index of training data
-    indTestPercept = dataType == 2; % Index of percept test data
-    indTestimagery = dataType == 3; % index of imagery test data
+    % Get image features for training and test
+    trainFeat = layerFeat(featType == 1, :);
+    trainImageIds = imageIds(featType == 1, :);
 
-    trainData = brainData(indTrain, :);
-    testPerceptData = brainData(indTestPercept, :);
-    testImageryData = brainData(indTestimagery, :);
-
-    trainLabels = labels(indTrain, :);
-    testPerceptLabels = labels(indTestPercept, :);
-    testimageryLabels = labels(indTestimagery, :);
+    trainFeat = get_refdata(trainFeat, trainImageIds, trainLabels);
 
     %% Preprocessing ---------------------------------------------------
-    
+
     %% Normalize data
     [trainData, xMean, xNorm] = zscore(trainData);
 
     testPerceptData = bsxfun(@rdivide, bsxfun(@minus, testPerceptData, xMean), xNorm);
     testImageryData = bsxfun(@rdivide, bsxfun(@minus, testImageryData, xMean), xNorm);
 
-    
-    %% Loop for each unit ----------------------------------------------    
-    results = [];
+    %% Preprocessing (normalization of image features)
+    [trainFeat, yMean, yNorm] = zscore(trainFeat);
 
-    for i = 1:nUnit
+    %% Loop for each unit ----------------------------------------------
 
+    predictPercept = [];  % Predicted labels for perception test
+    predictImagery = [];  % Predicted labels for imagery test
+
+    numUnits = size(trainFeat, 2);
+    %numUnits = 100;  % For quick test
+
+    for i = 1:numUnits
         fprintf('Unit %d\n', i);
-        
-        %% Get image features for training
-        trainFeat = layerFeat(featType == 1, i);
-        trainImageIds = imageIds(featType == 1, :);
 
-        %% Match training features to labels
-        trainFeat = get_refdata(trainFeat, trainImageIds, trainLabels);
+        %% Get features in the current unit
+        yTrain = trainFeat(:, i);
 
-        %% Preprocessing (normalization of image features)
-        [trainFeat, yMean, yNorm] = zscore(trainFeat);
-
-        %% Preprocessing (voxel selection based on correlation)
-        cor = fastcorr(trainData, trainFeat);
+        %% Voxel selection based on correlation
+        cor = fastcorr(trainData, yTrain);
         [xTrain, selInd] = select_top(trainData, abs(cor), nVox);
         xTestPercept = testPerceptData(:, selInd);
         xTestImagery = testImageryData(:, selInd);
-    
+
         %% Add bias terms and transpose matrixes for SLR functions
         xTrain = add_bias(xTrain)';
         xTestPercept = add_bias(xTestPercept)';
         xTestImagery = add_bias(xTestImagery)';
 
-        trainFeat = trainFeat';
+        yTrain = yTrain';
 
         %% Image feature decoding --------------------------------------
-
-        model = [];
-        predict = [];
 
         %% Model parameters
         param.Ntrain = nTrain;
@@ -244,49 +238,43 @@ for n = 1:size(analysisParam, 1)
 
         param.xmean = xMean;
         param.xnorm = xNorm;
-        param.ymean = yMean;
-        param.ynorm = yNorm;
-    
+        param.ymean = yMean(i);
+        param.ynorm = yNorm(i);
+
         %% Model training
-        model = linear_map_sparse_cov(xTrain, trainFeat, model, param);
+        model = linear_map_sparse_cov(xTrain, yTrain, [], param);
 
         %% Image feature prediction
-        predictPercept = predict_output(xTestPercept, model, param)';
-        predictImagery = predict_output(xTestImagery, model, param)';
+        yPredPercept = predict_output(xTestPercept, model, param)';
+        yPredImagery = predict_output(xTestImagery, model, param)';
 
-        %% Average prediction results for each category
-        testPerceptCategory = unique(floor(testPerceptLabels));
-        testImageryCategory = unique(floor(testimageryLabels));
-
-        for j = 1:length(testPerceptCategory)
-            categ = testPerceptCategory(j);
-            predictPerceptCatAve(j, 1) ...
-                = mean(predictPercept(floor(testPerceptLabels) == categ));
-        end
-        for j = 1:length(testImageryCategory)
-            categ = testImageryCategory(j);
-            predictImageryCatAve(j, 1) ...
-                = mean(predictImagery(floor(testimageryLabels) == categ));
-        end
-
-        results(i).subject = subjectList{iSbj};
-        results(i).roi = roiList{iRoi};
-        results(i).feature = featureList{iFeat};
-        results(i).unit = i;
-        results(i).predictPercept = predictPercept;
-        results(i).predictImagery = predictImagery;
-        results(i).predictPerceptCatAve = predictPerceptCatAve;
-        results(i).predictImageryCatAve = predictImageryCatAve;
-        results(i).categoryTestPercept = testPerceptCategory;
-        results(i).categoryTestImagery = testImageryCategory;
+        predictPercept = [predictPercept, yPredPercept];
+        predictImagery = [predictImagery, yPredImagery];
     end
-    
+
+    %% Average prediction results for each category
+    categoryTestPercept = unique(floor(testPerceptLabels));
+    categoryTestImagery = unique(floor(testimageryLabels));
+
+    for j = 1:length(categoryTestPercept)
+        categ = categoryTestPercept(j);
+        predictPerceptAveraged(j, :) = mean(predictPercept(floor(testPerceptLabels) == categ, :));
+    end
+    for j = 1:length(categoryTestImagery)
+        categ = categoryTestImagery(j);
+        predictImageryAveraged(j, :) = mean(predictImagery(floor(testimageryLabels) == categ, :));
+    end
+
     %% Save data -------------------------------------------------------
     [rDir, rFileBase, rExt] = fileparts(resultFile);
     setupdir(rDir);
-        
-    save(resultFile, 'results', '-v7.3');
-    
+
+    save(resultFile, ...
+         'predictPercept', 'predictImagery', ...
+         'predictPerceptAveraged', 'predictImageryAveraged', ...
+         'categoryTestPercept', 'categoryTestImagery', ...
+         '-v7.3');
+
     %% Remove lock file ------------------------------------------------
     unlockcomput(analysisId, lockDir);
 
