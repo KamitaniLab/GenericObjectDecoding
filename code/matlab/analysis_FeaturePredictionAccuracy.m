@@ -54,25 +54,17 @@ fprintf('Loading image feature data...\n');
 
 [feat.dataSet, feat.metaData] = load_data(fullfile(dataDir, imageFeatureFile));
 
-% Get num of units for each feature
-% (1 = training; 2 = test; 3 = category test; 4 = category others)
-for n = 1:length(featureList)
-    numUnits(n) = size(select_feature(feat.dataSet, feat.metaData, sprintf('%s = 1', featureList{n})), 2);
-end
-
 %%----------------------------------------------------------------------
 %% Create analysis parameter matrix (analysisParam)
 %%----------------------------------------------------------------------
 
-analysisParam = uint16(zeros(length(subjectList) * length(roiList) * length(featureList), 4));
+analysisParam = uint16(zeros(length(subjectList) * length(roiList) * length(featureList), 3));
 
 c = 1;
 for iSbj = 1:length(subjectList)
 for iRoi = 1:length(roiList)
 for iFeat = 1:length(featureList)
-    numUnit = size(select_feature(feat.dataSet, feat.metaData, sprintf('%s = 1', featureList{iFeat})), 2);
-
-    analysisParam(c, :) = [ iSbj, iRoi, iFeat, numUnit ];
+    analysisParam(c, :) = [ iSbj, iRoi, iFeat ];
     c =  c + 1;
 end
 end
@@ -92,7 +84,6 @@ for n = 1:size(analysisParam, 1)
     iSbj = analysisParam(n, 1);
     iRoi = analysisParam(n, 2);
     iFeat = analysisParam(n, 3);
-    numUnits = analysisParam(n, 4);
 
     % Set analysis ID and a result file name
     analysisId = sprintf('%s-%s-%s-%s', ...
@@ -118,15 +109,11 @@ for n = 1:size(analysisParam, 1)
     predResultFile = predResultFileNameFormat(subjectList{iSbj}, roiList{iRoi}, featureList{iFeat});
     res = load(predResultFile);
 
-    predPercept = [];
-    predImagery = [];
-    for k = 1:length(res.results)
-        predPercept = [predPercept, res.results(k).predictPerceptCatAve];
-        predImagery = [predImagery, res.results(k).predictImageryCatAve];
-    end
+    predPercept = res.predictPerceptAveraged;
+    predImagery = res.predictImageryAveraged;
 
-    categoryPercept = res.results(1).categoryTestPercept;
-    categoryImagery = res.results(1).categoryTestImagery;
+    categoryPercept = res.categoryTestPercept;
+    categoryImagery = res.categoryTestImagery;
 
     %% Calculate category feature prediction accuracy ------------------
 

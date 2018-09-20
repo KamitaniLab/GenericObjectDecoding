@@ -32,8 +32,9 @@ clear all;
 
 subjectList  = {'Subject1', 'Subject2', 'Subject3', 'Subject4', 'Subject5'};
 roiList      = {'V1', 'V2', 'V3', 'V4', 'FFA', 'LOC', 'PPA', 'LVC', 'HVC',  'VC'};
-numVoxelList = { 500,  500,  500,  500,   500,   500,   500,  1000,  1000,  1000};
 featureList  = {'cnn1', 'cnn2', 'cnn3', 'cnn4', 'cnn5', 'cnn6', 'cnn7', 'cnn8'};
+
+network = 'matconvnet';
 
 %% Directory settings
 workDir = pwd;
@@ -41,14 +42,6 @@ resultsDir = fullfile(workDir, 'results'); % Directory to save analysis results
 
 %% File name settings
 resultFileNameFormat = @(s, r, f) fullfile(resultsDir, sprintf('%s/%s/%s.mat', s, r, f));
-
-%% Model parameters
-nTrain = 200; % Num of total training iteration
-nSkip  = 200; % Num of skip steps for display info
-
-%--------------------------------------------------------------------------------%
-% Note: The num of training iteration (`nTrain`) was 2000 in the original paper. %
-%--------------------------------------------------------------------------------%
 
 
 %% Main %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,9 +55,9 @@ for ifeat = 1:length(featureList)
 
     resultfile = resultFileNameFormat(subject, roi, feature);
 
-    dirDecodedFeatruePercept = fullfile(resultsDir, 'decodedfeatures', 'perception', 'matconvnet', ...
+    dirDecodedFeatruePercept = fullfile(resultsDir, 'decodedfeatures', 'perception', network, ...
                                         featureList{ifeat}, subjectList{isub}, roiList{iroi});
-    dirDecodedFeatrueImagery = fullfile(resultsDir, 'decodedfeatures', 'imagery', 'matconvnet', ...
+    dirDecodedFeatrueImagery = fullfile(resultsDir, 'decodedfeatures', 'imagery', network, ...
                                         featureList{ifeat}, subjectList{isub}, roiList{iroi});
 
     if ~exist(resultfile)
@@ -73,28 +66,32 @@ for ifeat = 1:length(featureList)
 
     res = load(resultfile);
 
-    testPerceptCategory = res.results(1).categoryTestPercept;
-    predfeatPerceptAve = [res.results(:).predictPerceptCatAve];
-    predfeatImageryAve = [res.results(:).predictImageryCatAve];
+    categoryTestPercept = res.categoryTestPercept;
+    categoryTestImagery = res.categoryTestImagery;
+    predfeatPerceptAve = res.predictPerceptAveraged;
+    predfeatImageryAve = res.predictImageryAveraged;
 
     %% Save decoded features for image reconstruction
     setupdir(dirDecodedFeatruePercept);
     setupdir(dirDecodedFeatrueImagery);
 
-    for p = 1:length(testPerceptCategory)
-        catid = testPerceptCategory(p);
+    for p = 1:length(categoryTestPercept)
+        catid = categoryTestPercept(p);
         
         feat = predfeatPerceptAve(p, :);
         resfilePercept = fullfile(dirDecodedFeatruePercept, ...
                                   sprintf('%s-%s-%s-%s-%s-%s-%d.mat', ...
-                                          'decodedfeatures', 'perception', 'matconvnet', ...
+                                          'decodedfeatures', 'perception', network, ...
                                           featureList{ifeat}, subjectList{isub}, roiList{iroi}, catid));
         save(resfilePercept, 'feat', '-v7.3');
+    end
+    for p = 1:length(categoryTestImagery)
+        catid = categoryTestImagery(p);
 
         feat = predfeatImageryAve(p, :);
         resfileImagery = fullfile(dirDecodedFeatrueImagery, ...
                                   sprintf('%s-%s-%s-%s-%s-%s-%d.mat', ...
-                                          'decodedfeatures', 'imagery', 'matconvnet', ...
+                                          'decodedfeatures', 'imagery', network, ...
                                           featureList{ifeat}, subjectList{isub}, roiList{iroi}, catid));
         save(resfileImagery, 'feat', '-v7.3');
     end
