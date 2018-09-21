@@ -1,22 +1,22 @@
 % Convert feature prediction results fot deep image reconstruction
 %
-% Result files:
+% Output files:
 %
-% results/decodedfeatures -+- imagery --- matconvnet -+- cnn1 -+- Subject1 -+- FFA --- Mat files
-%                          |                          |        |            |
-%                          |                          |        |            +- LOC --- Mat files
-%                          |                          |        |            |
-%                          |                          |        |           ...
-%                          |                          |        |
-%                          |                          |        +- Subject2 --- ...
-%                          |                          |        |
-%                          |                          |       ...
-%                          |                          |
-%                          |                          +- cnn2 --- ...
-%                          |                          |
-%                          |                         ...
-%                          |
-%                          +- perception --- ...
+% decodedfeatures -+- imagery --- matconvnet -+- cnn1 -+- Subject1 -+- FFA --- Mat files
+%                  |                          |        |            |
+%                  |                          |        |            +- LOC --- Mat files
+%                  |                          |        |            |
+%                  |                          |        |           ...
+%                  |                          |        |
+%                  |                          |        +- Subject2 --- ...
+%                  |                          |        |
+%                  |                          |       ...
+%                  |                          |
+%                  |                          +- cnn2 --- ...
+%                  |                          |
+%                  |                         ...
+%                  |
+%                  +- perception --- ...
 %
 
 
@@ -39,6 +39,7 @@ network = 'matconvnet';
 %% Directory settings
 workDir = pwd;
 resultsDir = fullfile(workDir, 'results'); % Directory to save analysis results
+outputDir = fullfile(workDir, 'decodedfeatures');  % Directory to save converted decoded features
 
 %% File name settings
 resultFileNameFormat = @(s, r, f) fullfile(resultsDir, sprintf('%s/%s/%s.mat', s, r, f));
@@ -55,9 +56,9 @@ for ifeat = 1:length(featureList)
 
     resultfile = resultFileNameFormat(subject, roi, feature);
 
-    dirDecodedFeatruePercept = fullfile(resultsDir, 'decodedfeatures', 'perception', network, ...
+    dirDecodedFeatruePercept = fullfile(outputDir, 'perception', network, ...
                                         featureList{ifeat}, subjectList{isub}, roiList{iroi});
-    dirDecodedFeatrueImagery = fullfile(resultsDir, 'decodedfeatures', 'imagery', network, ...
+    dirDecodedFeatrueImagery = fullfile(outputDir, 'imagery', network, ...
                                         featureList{ifeat}, subjectList{isub}, roiList{iroi});
 
     if ~exist(resultfile)
@@ -75,10 +76,17 @@ for ifeat = 1:length(featureList)
     setupdir(dirDecodedFeatruePercept);
     setupdir(dirDecodedFeatrueImagery);
 
+    subsPercept.type = '()';
+    subsPercept.subs = repmat({':'}, 1, ndims(predfeatPerceptAve));
+    
+    subsImagery.type = '()';
+    subsImagery.subs = repmat({':'}, 1, ndims(predfeatImageryAve));
+    
     for p = 1:length(categoryTestPercept)
         catid = categoryTestPercept(p);
+        subsPercept.subs{1} = p;
         
-        feat = predfeatPerceptAve(p, :);
+        feat = squeeze(shiftdim(subsref(predfeatPerceptAve, subsPercept), 1));
         resfilePercept = fullfile(dirDecodedFeatruePercept, ...
                                   sprintf('%s-%s-%s-%s-%s-%s-%d.mat', ...
                                           'decodedfeatures', 'perception', network, ...
@@ -87,8 +95,9 @@ for ifeat = 1:length(featureList)
     end
     for p = 1:length(categoryTestImagery)
         catid = categoryTestImagery(p);
+        subsImagery.subs{1} = p;
 
-        feat = predfeatImageryAve(p, :);
+        feat = squeeze(shiftdim(subsref(predfeatImageryAve, subsImagery), 1));
         resfileImagery = fullfile(dirDecodedFeatrueImagery, ...
                                   sprintf('%s-%s-%s-%s-%s-%s-%d.mat', ...
                                           'decodedfeatures', 'imagery', network, ...
