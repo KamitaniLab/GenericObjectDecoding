@@ -201,7 +201,7 @@ for n = 1:size(analysisParam, 1)
     %% Normalize image features
     [trainFeat, yMean, yNorm] = zscore(trainFeat);
 
-    %% Loop for each unit ----------------------------------------------
+    %% Feature prediction ----------------------------------------------
 
     predictPercept = [];  % Predicted labels for perception test
     predictImagery = [];  % Predicted labels for imagery test
