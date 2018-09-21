@@ -24,7 +24,8 @@ resFeatPred = load(resultsFileFeatPred);
 resCatIdent = load(resultsFileCatIdent);
 
 subjectList = unique({resFeatPred.results(:).subject});
-roiList     = unique({resFeatPred.results(:).roi});
+%roiList     = unique({resFeatPred.results(:).roi});
+roiList     = {'V1', 'V2', 'V3', 'V4', 'FFA', 'LOC', 'PPA', 'LVC', 'HVC',  'VC'};
 featureList = unique({resFeatPred.results(:).feature});
 
 %% Realign results to a 3D array (subject x ROI x feature)
