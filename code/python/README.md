@@ -41,7 +41,7 @@ Download links:
 - [Subject3.mat](https://ndownloader.figshare.com/files/13663493)
 - [Subject4.mat](https://ndownloader.figshare.com/files/13663496)
 - [Subject5.mat](https://ndownloader.figshare.com/files/13663499)
-- [ImageFeatures.h5](https://ndownloader.figshare.com/files/15015971) (for Python demo scripts)
+- [ImageFeatures.h5](https://ndownloader.figshare.com/files/15015971)
 
 ## Script files
 
