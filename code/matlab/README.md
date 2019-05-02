@@ -9,7 +9,7 @@ This is MATLAB code for Generic Decoding Demo.
 ## Data organization
 
 All data should be placed in `matlab/data`.
-Data can be obrained from <http://brainliner.jp/data/brainliner/Generic_Object_Decoding>.
+Data can be obrained from [figshare](https://figshare.com/articles/Generic_Object_Decoding/7387130).
 The data directory should have the following files:
 
     data/ --+-- Subject1.mat (fMRI data, subject 1)
@@ -26,12 +26,12 @@ The data directory should have the following files:
 
 Download links:
 
-- [Subject1.mat](http://brainliner.jp/download/32/downloadSupplementaryFile)
-- [Subject2.mat](http://brainliner.jp/download/36/downloadSupplementaryFile)
-- [Subject3.mat](http://brainliner.jp/download/34/downloadSupplementaryFile)
-- [Subject4.mat](http://brainliner.jp/download/35/downloadSupplementaryFile)
-- [Subject5.mat](http://brainliner.jp/download/33/downloadSupplementaryFile)
-- [ImageFeatures.mat](http://brainliner.jp/download/50/downloadSupplementaryFile)
+- [Subject1.mat](https://ndownloader.figshare.com/files/13663487)
+- [Subject2.mat](https://ndownloader.figshare.com/files/13663490)
+- [Subject3.mat](https://ndownloader.figshare.com/files/13663493)
+- [Subject4.mat](https://ndownloader.figshare.com/files/13663496)
+- [Subject5.mat](https://ndownloader.figshare.com/files/13663499)
+- [ImageFeatures.mat](https://ndownloader.figshare.com/files/15015977)
 
 ## Analysis
 
