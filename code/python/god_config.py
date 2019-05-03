@@ -7,11 +7,11 @@ import os
 analysis_name = 'GenericObjectDecoding'
 
 # Data settings
-subjects = {'Subject1' : ['data/Subject1.mat'],
-            'Subject2' : ['data/Subject2.mat'],
-            'Subject3' : ['data/Subject3.mat'],
-            'Subject4' : ['data/Subject4.mat'],
-            'Subject5' : ['data/Subject5.mat']}
+subjects = {'Subject1' : ['data/Subject1.h5'],
+            'Subject2' : ['data/Subject2.h5'],
+            'Subject3' : ['data/Subject3.h5'],
+            'Subject4' : ['data/Subject4.h5'],
+            'Subject5' : ['data/Subject5.h5']}
 
 rois = {'VC' : 'ROI_VC = 1',
         'LVC' : 'ROI_LVC = 1',

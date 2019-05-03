@@ -109,9 +109,9 @@ def main():
         print('Preparing data')
         dat = data_all[sbj]
 
-        x = dat.select(rois[roi])          # Brain data
-        datatype = dat.select('DataType')  # Data type
-        labels = dat.select('Label')       # Image labels in brain data
+        x = dat.select(rois[roi])           # Brain data
+        datatype = dat.select('DataType')   # Data type
+        labels = dat.select('stimulus_id')  # Image labels in brain data
 
         y = data_feature.select(feat)             # Image features
         y_label = data_feature.select('ImageID')  # Image labels
