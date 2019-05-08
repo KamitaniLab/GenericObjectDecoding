@@ -22,15 +22,15 @@ All data should be placed in `python/data`.
 Data can be obrained from [figshare](https://figshare.com/articles/Generic_Object_Decoding/7387130).
 The data directory should have the following files:
 
-    data/ --+-- Subject1.mat (fMRI data, subject 1)
+    data/ --+-- Subject1.h5 (fMRI data, subject 1)
             |
-            +-- Subject2.mat (fMRI data, subject 2)
+            +-- Subject2.h5 (fMRI data, subject 2)
             |
-            +-- Subject3.mat (fMRI data, subject 3)
+            +-- Subject3.h5 (fMRI data, subject 3)
             |
-            +-- Subject4.mat (fMRI data, subject 4)
+            +-- Subject4.h5 (fMRI data, subject 4)
             |
-            +-- Subject5.mat (fMRI data, subject 5)
+            +-- Subject5.h5 (fMRI data, subject 5)
             |
             +-- ImageFeatures.h5 (image features extracted with Matconvnet)
 
