@@ -53,9 +53,18 @@ Download links:
 
 ## Analysis
 
-### Quick guide
+## Analysis
+
+Run the following scripts.
 
     $ python analysis_FeaturePrediction.py
     $ python analysis_FeaturePredictionMergeResults.py
-    $ python analysis_CategoryIdentification.py
+    $ python analysis_CategoryIdentification.py>> analysis_FeaturePrediction
+
+The all results will be saved in `results` directory.
+
+To visualize the results, run the following script.
+
     $ python createfigure.py
+
+`createfigure.py` will create two figures: one shows the results of image feature and category-averaged feature prediction, and the other displays the results of category identification. The figures will be saved in `results` directory in PDF format (`createfigure_featureprediction.pdf` and `createfigure_categoryidentification.pdf`).
