@@ -53,8 +53,6 @@ Download links:
 
 ## Analysis
 
-## Analysis
-
 Run the following scripts.
 
     $ python analysis_FeaturePrediction.py
