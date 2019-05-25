@@ -57,7 +57,7 @@ Run the following scripts.
 
     $ python analysis_FeaturePrediction.py
     $ python analysis_FeaturePredictionMergeResults.py
-    $ python analysis_CategoryIdentification.py>> analysis_FeaturePrediction
+    $ python analysis_CategoryIdentification.py
 
 The all results will be saved in `results` directory.
 
