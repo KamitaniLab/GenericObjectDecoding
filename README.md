@@ -17,7 +17,7 @@ While most of the images can be downloaded from the URLs, some of the images ha
 
 For easier access to the stimulus images used in our study, we provide a matlab code (get_stimulusimages.m) for downloading all the training and test images from the ImageNet (while you still need to register to the ImageNet). The code requires your username and accesskey, which are provided from the ImageNet, as its arguments. Using this code, you can automatically collect the images cropped and resized as in our study. Note that it will take about one day for collecting all the experimental stimuli with a single computer. But you can run the code with multiple computers in parallell to accelarate the processings.
 
-Please contact us (kamitanilab.contact@gmail.com) if you have trouble with the above method, so that we will help you obtaining the images. 
+Please contact us (<brainliner-admin@atr.jp>) if you have trouble with the above method, so that we will help you obtaining the images. 
 
 ## Demo program
 
