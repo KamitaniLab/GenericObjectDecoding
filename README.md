@@ -13,7 +13,7 @@ The unpreprocessed fMRI data is available at [OpenNeuro](https://openneuro.org/d
 ## Visual images
 
 For copyright reasons, we do not make the visual images used in our experiments publicly available.
-Please contact us via email (<brainliner-admin@atr.jp>) for stimulus image request.
+You can request us to share the stimulus images at <https://forms.gle/ujvA34948Xg49jdn9>.
 
 ## Demo program
 
