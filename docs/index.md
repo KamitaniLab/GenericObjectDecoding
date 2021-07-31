@@ -16,4 +16,4 @@ Please contact us (<kamitanilab@gmail.com>) if you have trouble with the above m
 
 ## Demo codes
 
-Currently, the codes used in the present study are available from the authors upon request. We will make the codes openly available soon.
+Please visit <https://github.com/KamitaniLab/GenericObjectDecoding> for the demo code.
