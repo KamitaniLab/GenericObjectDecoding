@@ -15,6 +15,8 @@ The unpreprocessed fMRI data is available at [OpenNeuro](https://openneuro.org/d
 For copyright reasons, we do not make the visual images used in our experiments publicly available.
 You can request us to share the stimulus images at <https://forms.gle/ujvA34948Xg49jdn9>.
 
+Stimulus images used for higher visual area locazlier experiments in this study are available via <https://forms.gle/c6HGatLrt7JtTGQk7>.
+
 ## Demo program
 
 Demo programs for Matlab and Python are available in [code/matlab](code/matlab/) and [code/python](code/python), respectively.
