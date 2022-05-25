@@ -147,6 +147,7 @@ for n = 1:size(analysisParam, 1)
 
     dataType = get_dataset(dat(iSbj).dataSet, dat(iSbj).metaData, 'DataType');
     labels = get_dataset(dat(iSbj).dataSet, dat(iSbj).metaData, 'Label');
+    labels = labels(:,1); 
 
     % dataType
     % --------
