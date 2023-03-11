@@ -17,6 +17,8 @@ You can request us to share the stimulus images at <https://forms.gle/ujvA34948X
 
 Stimulus images used for higher visual area locazlier experiments in this study are available via <https://forms.gle/c6HGatLrt7JtTGQk7>.
 
+Some of the test images were taken from ILSVRC 2012 training images. See [data/stimulus_info_ImageNetTest.csv](https://github.com/KamitaniLab/GenericObjectDecoding/blob/master/data/stimulus_info_ImageNetTest.csv) for the list of images included in ILSVRC 2012 training images.
+
 ## Demo program
 
 Demo programs for Matlab and Python are available in [code/matlab](code/matlab/) and [code/python](code/python), respectively.
