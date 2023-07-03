@@ -3,14 +3,20 @@
 This repository contains the data and demo codes for replicating results in our paper: [Horikawa and Kamitani (2017) Generic decoding of seen and imagined objects using hierarchical visual features. Nature Communications 8:15037](https://www.nature.com/articles/ncomms15037).
 The generic object decoding approach enabled decoding of arbitrary object categories including those not used in model training.
 
-## Data (fMRI data and visual features)
+## Dataset
 
-The preprocessed fMRI data for five subjects (training, test_perception, and test_imagery) and visual features (CNN1-8, HMAX1-3, GIST, and SIFT) are available at [figshare](https://figshare.com/articles/Generic_Object_Decoding/7387130).
-The fMRI data were saved as the [BrainDecoderToolbox2](https://github.com/KamitaniLab/BrainDecoderToolbox2)/[bdpy](https://github.com/KamitaniLab/bdpy) format.
+- Raw fMRI data: [OpenNeuro](https://openneuro.org/datasets/ds001246)
+- Preprocessed fMRI data and image features: [figshare](https://figshare.com/articles/Generic_Object_Decoding/7387130)
+- Stimulus images: upon request via <https://forms.gle/ujvA34948Xg49jdn9>
 
-The unpreprocessed fMRI data is available at [OpenNeuro](https://openneuro.org/datasets/ds001246).
+## Code
 
-## Visual images
+Demo programs for Matlab and Python are available in [code/matlab](code/matlab/) and [code/python](code/python), respectively.
+See README.md in each directory for the details.
+
+## Note
+
+### Visual images
 
 For copyright reasons, we do not make the visual images used in our experiments publicly available.
 You can request us to share the stimulus images at <https://forms.gle/ujvA34948Xg49jdn9>.
@@ -18,8 +24,3 @@ You can request us to share the stimulus images at <https://forms.gle/ujvA34948X
 Stimulus images used for higher visual area locazlier experiments in this study are available via <https://forms.gle/c6HGatLrt7JtTGQk7>.
 
 Some of the test images were taken from ILSVRC 2012 training images. See [data/stimulus_info_ImageNetTest.csv](https://github.com/KamitaniLab/GenericObjectDecoding/blob/master/data/stimulus_info_ImageNetTest.csv) for the list of images included in ILSVRC 2012 training images.
-
-## Demo program
-
-Demo programs for Matlab and Python are available in [code/matlab](code/matlab/) and [code/python](code/python), respectively.
-See README.md in each directory for the details.
