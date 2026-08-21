@@ -7,7 +7,7 @@ The generic object decoding approach enabled decoding of arbitrary object catego
 
 - Raw fMRI data: [OpenNeuro](https://openneuro.org/datasets/ds001246)
 - Preprocessed fMRI data and image features: [figshare](https://figshare.com/articles/Generic_Object_Decoding/7387130)
-- Stimulus images: upon request via <https://forms.gle/ujvA34948Xg49jdn9>
+- Stimulus images: upon request via <https://forms.gle/BMTJyYRmhGCrr5P67>
 
 ## Code
 
@@ -19,8 +19,8 @@ See README.md in each directory for the details.
 ### Visual images
 
 For copyright reasons, we do not make the visual images used in our experiments publicly available.
-You can request us to share the stimulus images at <https://forms.gle/ujvA34948Xg49jdn9>.
+You can request us to share the stimulus images at <https://forms.gle/BMTJyYRmhGCrr5P67>.
 
-Stimulus images used for higher visual area locazlier experiments in this study are available via <https://forms.gle/c6HGatLrt7JtTGQk7>.
+Stimulus images used for higher visual area locazlier experiments in this study are available via <https://forms.gle/BSJZMSy98hSBavZ88>.
 
 Some of the test images were taken from ILSVRC 2012 training images. See [data/stimulus_info_ImageNetTest.csv](https://github.com/KamitaniLab/GenericObjectDecoding/blob/master/data/stimulus_info_ImageNetTest.csv) for the list of images included in ILSVRC 2012 training images.
